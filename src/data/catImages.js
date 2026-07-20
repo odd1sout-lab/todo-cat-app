@@ -20,8 +20,10 @@ export const CAT_MOODS = ['sad', 'happy', 'calm', 'angry', 'hungry']
 export const CAT_STYLES = ['standard', 'tie', 'smart', 'king', 'magician', 'british', 'party', 'bad', 'japan']
 
 // Запасная картинка, если нужного файла ещё нет в public/cat/
-export const FALLBACK_CAT_IMAGE = '/cat/cat.png'
+// Используем import.meta.env.BASE_URL, чтобы путь работал и локально,
+// и на GitHub Pages (где сайт живёт в подпапке /название-репозитория/).
+export const FALLBACK_CAT_IMAGE = `${import.meta.env.BASE_URL}cat/cat.png`
 
 export function buildCatImagePath(color, mood, style) {
-  return `/cat/${color}_${mood}_${style}.png`
+  return `${import.meta.env.BASE_URL}cat/${color}_${mood}_${style}.png`
 }
