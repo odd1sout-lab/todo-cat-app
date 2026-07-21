@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { relativeDayLabel, fromISODate } from '../utils/date'
+import { relativeDayLabel, isPastDeadline } from '../utils/date'
+import { CATEGORIES, getCategory } from '../data/categories'
 
 const COIN_REWARD = 5
 
@@ -9,16 +10,9 @@ const PRIORITIES = [
   { id: 'high', label: 'Важно', icon: 'bi-fire' },
 ]
 
-function isOverdue(task) {
-  if (task.done || !task.dueTime || !task.dueDate) return false
-  const [h, m] = task.dueTime.split(':').map(Number)
-  const due = fromISODate(task.dueDate)
-  due.setHours(h, m, 0, 0)
-  return due.getTime() < Date.now()
-}
-
 function TaskRow({ task, onToggle, onDelete }) {
-  const overdue = isOverdue(task)
+  const overdue = !task.done && isPastDeadline(task)
+  const category = getCategory(task.category)
   return (
     <li className={`task-item priority-${task.priority} ${task.done ? 'task-done' : ''}`}>
       <div className="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
@@ -32,7 +26,10 @@ function TaskRow({ task, onToggle, onDelete }) {
         </button>
         <div className="min-w-0">
           <div className="task-text text-truncate">{task.text}</div>
-          <div className="d-flex align-items-center gap-2 mt-1">
+          <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
+            <span className="task-category-chip" style={{ background: `${category.color}22`, color: category.color }}>
+              <i className={`bi ${category.icon} me-1`} />{category.label}
+            </span>
             <span className={`task-chip chip-${task.priority}`}>
               {PRIORITIES.find(p => p.id === task.priority)?.label}
             </span>
@@ -55,23 +52,27 @@ function TaskRow({ task, onToggle, onDelete }) {
 export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelete }) {
   const [text, setText] = useState('')
   const [priority, setPriority] = useState('medium')
+  const [category, setCategory] = useState('work')
   const [dueTime, setDueTime] = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
 
   const submit = (e) => {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed) return
-    onAdd(trimmed, priority, dueTime || null)
+    onAdd(trimmed, priority, dueTime || null, category)
     setText('')
     setDueTime('')
   }
 
-  const activeTasks = [...tasks.filter(t => !t.done)].sort((a, b) => {
+  const visibleTasks = filterCategory === 'all' ? tasks : tasks.filter(t => (t.category || 'other') === filterCategory)
+  const activeTasks = [...visibleTasks.filter(t => !t.done)].sort((a, b) => {
     const ta = a.dueTime || '99:99'
     const tb = b.dueTime || '99:99'
     return ta.localeCompare(tb)
   })
-  const doneTasks = tasks.filter(t => t.done)
+  const doneTasks = visibleTasks.filter(t => t.done)
+  const usedCategories = [...new Set(tasks.map(t => t.category || 'other'))]
   const dayLabel = relativeDayLabel(selectedDate)
   const isPast = (() => {
     const d = new Date(selectedDate)
@@ -106,7 +107,7 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
             <i className="bi bi-plus-lg" />
           </button>
         </div>
-        <div className="d-flex align-items-center gap-2 flex-wrap">
+        <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
           <div className="priority-toggle">
             {PRIORITIES.map(p => (
               <button
@@ -134,7 +135,39 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
             )}
           </label>
         </div>
+        <select
+          className="form-select category-select"
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          aria-label="Категория задачи"
+        >
+          {CATEGORIES.map(c => (
+            <option key={c.id} value={c.id}>{c.label}</option>
+          ))}
+        </select>
       </form>
+
+      {usedCategories.length > 1 && (
+        <div className="category-filter-row mb-3">
+          <button
+            type="button"
+            className={`category-filter-chip ${filterCategory === 'all' ? 'category-filter-active' : ''}`}
+            onClick={() => setFilterCategory('all')}
+          >
+            Все
+          </button>
+          {CATEGORIES.filter(c => usedCategories.includes(c.id)).map(c => (
+            <button
+              key={c.id}
+              type="button"
+              className={`category-filter-chip ${filterCategory === c.id ? 'category-filter-active' : ''}`}
+              onClick={() => setFilterCategory(c.id)}
+            >
+              <i className={`bi ${c.icon} me-1`} />{c.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTasks.length === 0 && doneTasks.length === 0 && (
         <div className="empty-state">
@@ -163,7 +196,7 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
       )}
 
       <p className="small text-muted mt-3 mb-0">
-        <i className="bi bi-coin me-1" />За каждую выполненную задачу — {COIN_REWARD} монет котику на наряды и еду.
+        <i className="bi bi-coin me-1" />Честно выполненная в срок задача — {COIN_REWARD} монет котику. Если отметить после дедлайна — монет не будет.
       </p>
     </div>
   )

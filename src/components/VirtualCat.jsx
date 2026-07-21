@@ -24,7 +24,9 @@ export default function VirtualCat({
   const [bounce, setBounce] = useState(false)
   const [particles, setParticles] = useState([])
   const [imgFallbackLevel, setImgFallbackLevel] = useState(0)
+  const [tempHappy, setTempHappy] = useState(false)
   const lastPetRef = useRef(0)
+  const tempHappyTimerRef = useRef(null)
 
   useEffect(() => {
     const tick = () => {
@@ -36,8 +38,19 @@ export default function VirtualCat({
     return () => clearInterval(id)
   }, [lastActivityAt])
 
+  useEffect(() => {
+    return () => clearTimeout(tempHappyTimerRef.current)
+  }, [])
+
   const mood = catMood(idleMinutes, hunger)
+  const displayMood = tempHappy ? 'happy' : mood
   const outfit = OUTFITS.find(o => o.id === equippedOutfit) || OUTFITS[0]
+
+  const flashHappy = () => {
+    setTempHappy(true)
+    clearTimeout(tempHappyTimerRef.current)
+    tempHappyTimerRef.current = setTimeout(() => setTempHappy(false), 2500)
+  }
 
   useEffect(() => {
     setMessage(pickMessage(mood, {}))
@@ -47,6 +60,7 @@ export default function VirtualCat({
   useEffect(() => {
     if (justCompletedTaskTick > 0) {
       setMessage(pickMessage(mood, { justCompletedTask: true }))
+      flashHappy()
       popBounce()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,7 +69,7 @@ export default function VirtualCat({
   // Сбрасываем цепочку запасных картинок при смене цвета/настроения/наряда
   useEffect(() => {
     setImgFallbackLevel(0)
-  }, [catColor, mood, outfit.id])
+  }, [catColor, displayMood, outfit.id])
 
   const popBounce = () => {
     setBounce(true)
@@ -74,6 +88,7 @@ export default function VirtualCat({
     onFeed(FEED_COST, FEED_AMOUNT)
     setMessage(pickMessage(mood, { justFed: true }))
     addParticle('🍖')
+    flashHappy()
     popBounce()
   }
 
@@ -84,14 +99,15 @@ export default function VirtualCat({
     onPet()
     setMessage(pickMessage(mood, { justPetted: true }))
     addParticle('💗')
+    flashHappy()
     popBounce()
   }
 
   // Цепочка запасных вариантов, если конкретной картинки ещё нет в public/cat/:
   // 1) цвет+настроение+наряд  2) цвет+настроение+обычный наряд  3) общая заглушка
   const imageChain = [
-    buildCatImagePath(catColor, mood, outfit.id),
-    buildCatImagePath(catColor, mood, 'standard'),
+    buildCatImagePath(catColor, displayMood, outfit.id),
+    buildCatImagePath(catColor, displayMood, 'standard'),
     FALLBACK_CAT_IMAGE,
   ]
   const imageSrc = imageChain[Math.min(imgFallbackLevel, imageChain.length - 1)]

@@ -275,6 +275,48 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   align-items: center;
 }
 
+.task-category-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.category-select {
+  border-radius: var(--radius-md) !important;
+  border: 1.5px solid var(--border) !important;
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  font-size: 0.85rem;
+  max-width: 220px;
+}
+.category-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-light) !important;
+}
+
+.category-filter-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.category-filter-chip {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.category-filter-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 .task-time-chip-overdue {
   background: var(--coral-light);
   color: #c8452e;
@@ -572,6 +614,55 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   justify-content: center;
 }
 .stepper button:disabled { opacity: 0.4; }
+
+/* ============ Events / countdown tab ============ */
+.event-date-input { max-width: 170px; }
+
+.event-emoji-picker {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.event-emoji-btn {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.event-emoji-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+}
+.event-item-today {
+  border-color: var(--coral);
+  background: var(--coral-light);
+}
+.event-item-past { opacity: 0.65; }
+.event-emoji { font-size: 1.6rem; }
+.event-countdown {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  white-space: nowrap;
+}
 
 /* ============ Calendar ============ */
 .calendar-panel {

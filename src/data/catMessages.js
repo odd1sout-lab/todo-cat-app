@@ -1,7 +1,3 @@
-// Настроения котика (mood): happy, calm, hungry, sad, angry — под них ты готовишь картинки.
-// idleMinutes — сколько минут прошло без выполненных задач.
-// hunger — уровень сытости от 0 до 100.
-
 export function catMood(idleMinutes, hunger) {
   if (hunger <= 15 && idleMinutes >= 45) return 'angry'
   if (idleMinutes >= 60) return 'sad'

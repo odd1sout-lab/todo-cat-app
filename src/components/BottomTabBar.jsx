@@ -1,5 +1,6 @@
 const TABS = [
   { id: 'tasks', label: 'Задачи', icon: 'bi-check2-square' },
+  { id: 'events', label: 'События', icon: 'bi-calendar-heart' },
   { id: 'pomodoro', label: 'Помодоро', icon: 'bi-clock-history' },
   { id: 'tabata', label: 'Табата', icon: 'bi-stopwatch' },
   { id: 'cat', label: 'Котик', icon: 'bi-heart' },

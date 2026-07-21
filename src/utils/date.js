@@ -60,3 +60,28 @@ export function relativeDayLabel(date) {
   if (diffDays === -1) return 'Вчера'
   return `${weekdayShort(target)}, ${formatFullDate(target)}`
 }
+
+// Дедлайн задачи. Если указано конкретное время — сравниваем именно с ним.
+// Если времени нет — считаем дедлайном конец дня (23:59), чтобы задачи без
+// времени не считались просроченными раньше срока в течение своего же дня.
+export function isPastDeadline(task) {
+  if (!task.dueDate) return false
+  const due = fromISODate(task.dueDate)
+  if (task.dueTime) {
+    const [h, m] = task.dueTime.split(':').map(Number)
+    due.setHours(h, m, 0, 0)
+  } else {
+    due.setHours(23, 59, 59, 999)
+  }
+  return due.getTime() < Date.now()
+}
+
+// Сколько дней осталось до даты события (для вкладки "События"):
+// 0 = сегодня, положительное = впереди, отрицательное = уже прошло.
+export function daysUntil(dateISO) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = fromISODate(dateISO)
+  target.setHours(0, 0, 0, 0)
+  return Math.round((target - today) / 86400000)
+}

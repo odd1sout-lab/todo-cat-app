@@ -10,8 +10,10 @@ import Navbar from './components/Navbar'
 import BottomTabBar from './components/BottomTabBar'
 import SettingsPanel from './components/SettingsPanel'
 import WeekCalendar from './components/WeekCalendar'
+import EventsCalendar from './components/EventsCalendar'
 import { OUTFITS } from './data/outfits'
-import { addDays, fromISODate, startOfWeek, toISODate } from './utils/date'
+import { addDays, fromISODate, isPastDeadline, startOfWeek, toISODate } from './utils/date'
+import { playSfx } from './utils/sfx'
 
 const HUNGER_DECAY_PER_MINUTE = 0.2 // ~ 1 точка каждые 5 минут
 const PET_DAILY_COIN_CAP = 8
@@ -65,36 +67,51 @@ function App() {
     update(prev => ({ ...prev, lastActivityAt: Date.now() }))
   }, [update])
 
-  const addTask = (text, priority, dueTime) => {
+  const addTask = (text, priority, dueTime, category) => {
     update(prev => ({
       ...prev,
       tasks: [...prev.tasks, {
         id: crypto.randomUUID(),
         text,
         priority,
+        category: category || 'other',
         done: false,
         createdAt: Date.now(),
         dueDate: selectedDateISO,
         dueTime: dueTime || null,
+        rewarded: false,
       }],
     }))
     touchActivity()
   }
 
   const toggleTask = (id) => {
+    const task = data.tasks.find(t => t.id === id)
+    if (!task) return
+    const nowDone = !task.done
+    const cheated = nowDone && isPastDeadline(task)
+
     update(prev => {
-      const task = prev.tasks.find(t => t.id === id)
-      if (!task) return prev
-      const nowDone = !task.done
-      const coinsDelta = nowDone ? COIN_REWARD : -COIN_REWARD
+      if (nowDone) {
+        playSfx(cheated ? 'bad_mur.mp3' : 'good_mur.mp3')
+        return {
+          ...prev,
+          tasks: prev.tasks.map(t => t.id === id ? { ...t, done: true, rewarded: !cheated } : t),
+          coins: cheated ? prev.coins : prev.coins + COIN_REWARD,
+          lastActivityAt: Date.now(),
+        }
+      }
+      const current = prev.tasks.find(t => t.id === id)
       return {
         ...prev,
-        tasks: prev.tasks.map(t => t.id === id ? { ...t, done: nowDone } : t),
-        coins: Math.max(0, prev.coins + coinsDelta),
+        tasks: prev.tasks.map(t => t.id === id ? { ...t, done: false, rewarded: false } : t),
+        coins: current?.rewarded ? Math.max(0, prev.coins - COIN_REWARD) : prev.coins,
         lastActivityAt: Date.now(),
       }
     })
-    setJustCompletedTick(t => t + 1)
+
+    // Котик радуется и мурчит только за честно выполненную в срок задачу.
+    if (nowDone && !cheated) setJustCompletedTick(t => t + 1)
   }
 
   const deleteTask = (id) => {
@@ -167,6 +184,17 @@ function App() {
 
   const setCatColor = (color) => update(prev => ({ ...prev, catColor: color }))
   const setTheme = (theme) => update(prev => ({ ...prev, theme }))
+
+  const addEvent = (name, date, emoji) => {
+    update(prev => ({
+      ...prev,
+      events: [...prev.events, { id: crypto.randomUUID(), name, date, emoji }],
+    }))
+  }
+
+  const deleteEvent = (id) => {
+    update(prev => ({ ...prev, events: prev.events.filter(e => e.id !== id) }))
+  }
 
   const updatePomodoroSettings = (next) => {
     update(prev => ({
@@ -261,6 +289,14 @@ function App() {
               onDelete={deleteTask}
             />
           </div>
+        )}
+
+        {activeTab === 'events' && (
+          <EventsCalendar
+            events={data.events}
+            onAdd={addEvent}
+            onDelete={deleteEvent}
+          />
         )}
 
         {activeTab === 'pomodoro' && (

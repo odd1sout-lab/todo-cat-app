@@ -25,6 +25,7 @@ const defaultData = {
   catColor: 'orange',
   ambientTrack: null,
   ambientVolume: 0.5,
+  events: [],
 }
 
 function loadFromDisk() {
