@@ -1,12 +1,12 @@
 const TABS = [
-  { id: 'tasks', label: 'Задачи', icon: 'bi-check2-square' },
-  { id: 'events', label: 'События', icon: 'bi-calendar-heart' },
-  { id: 'pomodoro', label: 'Помодоро', icon: 'bi-clock-history' },
-  { id: 'tabata', label: 'Табата', icon: 'bi-stopwatch' },
-  { id: 'cat', label: 'Котик', icon: 'bi-heart' },
+  { id: 'tasks', key: 'tabTasks', icon: 'bi-check2-square' },
+  { id: 'events', key: 'tabEvents', icon: 'bi-calendar-heart' },
+  { id: 'pomodoro', key: 'tabPomodoro', icon: 'bi-clock-history' },
+  { id: 'tabata', key: 'tabTabata', icon: 'bi-stopwatch' },
+  { id: 'cat', key: 'tabCat', icon: 'bi-heart' },
 ]
 
-export default function BottomTabBar({ activeTab, onSelectTab }) {
+export default function BottomTabBar({ activeTab, onSelectTab, t }) {
   return (
     <nav className="bottom-tab-bar">
       {TABS.map(tab => (
@@ -17,7 +17,7 @@ export default function BottomTabBar({ activeTab, onSelectTab }) {
           onClick={() => onSelectTab(tab.id)}
         >
           <i className={`bi ${tab.icon}`} />
-          <span>{tab.label}</span>
+          <span>{t(tab.key)}</span>
         </button>
       ))}
     </nav>

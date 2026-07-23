@@ -3,15 +3,15 @@ import { toISODate, daysUntil, formatFullDate, fromISODate } from '../utils/date
 
 const EMOJIS = ['🎉', '🎂', '✈️', '📅', '💼', '🎓', '❤️', '🏆']
 
-function countdownLabel(diff) {
-  if (diff === 0) return 'Сегодня!'
-  if (diff === 1) return 'Завтра'
-  if (diff === -1) return 'Вчера'
-  if (diff > 1) return `Через ${diff} дн.`
-  return `${Math.abs(diff)} дн. назад`
+function countdownLabel(diff, t) {
+  if (diff === 0) return t('eventsToday')
+  if (diff === 1) return t('eventsTomorrow')
+  if (diff === -1) return t('eventsYesterday')
+  if (diff > 1) return t('eventsIn', { n: diff })
+  return t('eventsAgo', { n: Math.abs(diff) })
 }
 
-export default function EventsCalendar({ events, onAdd, onDelete }) {
+export default function EventsCalendar({ events, onAdd, onDelete, t, lang }) {
   const [name, setName] = useState('')
   const [date, setDate] = useState(() => toISODate(new Date()))
   const [emoji, setEmoji] = useState(EMOJIS[0])
@@ -34,8 +34,8 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
   return (
     <div className="panel p-3 p-md-4">
       <div className="mb-3">
-        <div className="eyebrow">Важные даты</div>
-        <h2 className="panel-title mb-0"><i className="bi bi-calendar-heart" /> События</h2>
+        <div className="eyebrow">{t('eventsEyebrow')}</div>
+        <h2 className="panel-title mb-0"><i className="bi bi-calendar-heart" /> {t('eventsTitle')}</h2>
       </div>
 
       <form onSubmit={submit} className="mb-4">
@@ -43,7 +43,7 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
           <input
             type="text"
             className="form-control task-form-input"
-            placeholder="Название события (день рождения, экзамен...)"
+            placeholder={t('eventsNamePlaceholder')}
             value={name}
             onChange={e => setName(e.target.value)}
           />
@@ -68,7 +68,7 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
             ))}
           </div>
           <button className="btn btn-pill btn-primary-soft px-3 ms-auto" type="submit">
-            <i className="bi bi-plus-lg me-1" />Добавить
+            <i className="bi bi-plus-lg me-1" />{t('eventsAdd')}
           </button>
         </div>
       </form>
@@ -76,7 +76,7 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
       {events.length === 0 && (
         <div className="empty-state">
           <span className="empty-emoji">📅</span>
-          Пока нет событий. Добавь день рождения, экзамен или поездку — увидишь обратный отсчёт.
+          {t('eventsEmpty')}
         </div>
       )}
 
@@ -86,11 +86,11 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
             <li key={ev.id} className={`event-item ${ev.diff === 0 ? 'event-item-today' : ''}`}>
               <span className="event-emoji">{ev.emoji}</span>
               <div className="flex-grow-1 min-w-0">
-                <div className="task-text text-truncate">{ev.name}</div>
-                <div className="small text-muted">{formatFullDate(fromISODate(ev.date))}</div>
+                <div className="task-text">{ev.name}</div>
+                <div className="small text-muted">{formatFullDate(fromISODate(ev.date), lang)}</div>
               </div>
-              <span className="event-countdown">{countdownLabel(ev.diff)}</span>
-              <button className="task-delete-btn" onClick={() => onDelete(ev.id)} aria-label="Удалить событие">
+              <span className="event-countdown">{countdownLabel(ev.diff, t)}</span>
+              <button className="task-delete-btn" onClick={() => onDelete(ev.id)} aria-label={t('delete')}>
                 <i className="bi bi-trash3" />
               </button>
             </li>
@@ -101,18 +101,18 @@ export default function EventsCalendar({ events, onAdd, onDelete }) {
       {past.length > 0 && (
         <details>
           <summary className="small text-muted mb-2" style={{ cursor: 'pointer' }}>
-            Прошедшие ({past.length})
+            {t('eventsPast')} ({past.length})
           </summary>
           <ul className="list-unstyled d-flex flex-column gap-2">
             {past.map(ev => (
               <li key={ev.id} className="event-item event-item-past">
                 <span className="event-emoji">{ev.emoji}</span>
                 <div className="flex-grow-1 min-w-0">
-                  <div className="task-text text-truncate">{ev.name}</div>
-                  <div className="small text-muted">{formatFullDate(fromISODate(ev.date))}</div>
+                  <div className="task-text">{ev.name}</div>
+                  <div className="small text-muted">{formatFullDate(fromISODate(ev.date), lang)}</div>
                 </div>
-                <span className="event-countdown">{countdownLabel(ev.diff)}</span>
-                <button className="task-delete-btn" onClick={() => onDelete(ev.id)} aria-label="Удалить событие">
+                <span className="event-countdown">{countdownLabel(ev.diff, t)}</span>
+                <button className="task-delete-btn" onClick={() => onDelete(ev.id)} aria-label={t('delete')}>
                   <i className="bi bi-trash3" />
                 </button>
               </li>

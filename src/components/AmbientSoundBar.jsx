@@ -1,6 +1,6 @@
 import { AMBIENT_TRACKS } from '../data/ambientTracks'
 
-export default function AmbientSoundBar({ ambient }) {
+export default function AmbientSoundBar({ ambient, t }) {
   const { track, playing, volume, missing, toggleTrack, setVolume } = ambient
 
   return (
@@ -35,7 +35,7 @@ export default function AmbientSoundBar({ ambient }) {
       )}
       {missing && (
         <div className="small text-muted mt-2">
-          Нажмите для запуска и паузы музыки
+          {t('soundMissingHint')}
         </div>
       )}
     </div>

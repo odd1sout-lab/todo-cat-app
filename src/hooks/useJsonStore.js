@@ -21,11 +21,14 @@ const defaultData = {
   tabataWorkSec: 20,
   tabataRestSec: 10,
   tabataRounds: 8,
+  tabataWorkMode: 'time',
+  tabataReps: 12,
   theme: 'light',
   catColor: 'orange',
   ambientTrack: null,
   ambientVolume: 0.5,
   events: [],
+  language: 'ru',
 }
 
 function loadFromDisk() {

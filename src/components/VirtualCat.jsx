@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { OUTFITS } from '../data/outfits'
 import { pickMessage, catMood } from '../data/catMessages'
 import { CAT_COLORS, buildCatImagePath, FALLBACK_CAT_IMAGE } from '../data/catImages'
+import Metronome from './Metronome'
 
 const FEED_COST = 5
 const FEED_AMOUNT = 30
 const PET_COOLDOWN_MS = 500
-
+ 
 export default function VirtualCat({
   lastActivityAt,
   equippedOutfit,
@@ -18,8 +19,9 @@ export default function VirtualCat({
   onOpenShop,
   onFeed,
   onPet,
+  t,
 }) {
-  const [message, setMessage] = useState('Привет! Я твой котик-помощник 🐾')
+  const [message, setMessage] = useState(t('catGreeting'))
   const [idleMinutes, setIdleMinutes] = useState(0)
   const [bounce, setBounce] = useState(false)
   const [particles, setParticles] = useState([])
@@ -66,7 +68,6 @@ export default function VirtualCat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [justCompletedTaskTick])
 
-  // Сбрасываем цепочку запасных картинок при смене цвета/настроения/наряда
   useEffect(() => {
     setImgFallbackLevel(0)
   }, [catColor, displayMood, outfit.id])
@@ -103,8 +104,6 @@ export default function VirtualCat({
     popBounce()
   }
 
-  // Цепочка запасных вариантов, если конкретной картинки ещё нет в public/cat/:
-  // 1) цвет+настроение+наряд  2) цвет+настроение+обычный наряд  3) общая заглушка
   const imageChain = [
     buildCatImagePath(catColor, displayMood, outfit.id),
     buildCatImagePath(catColor, displayMood, 'standard'),
@@ -117,76 +116,81 @@ export default function VirtualCat({
   }
 
   return (
-    <div className="cat-card p-3 p-md-4">
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <span className="coin-badge"><i className="bi bi-coin" /> {coins}</span>
-        <button className="btn btn-pill btn-outline-soft btn-sm" onClick={onOpenShop}>
-          <i className="bi bi-bag-heart me-1" /> Гардероб
-        </button>
-      </div>
+    <div>
 
-      <div className="cat-stage">
-        <button
-          type="button"
-          className="cat-image-btn"
-          onClick={handlePet}
-          aria-label="Погладить котика"
-          title="Погладить котика"
-        >
-          <img
-            src={imageSrc}
-            alt="Котик"
-            onError={handleImgError}
-            className={`cat-photo ${bounce ? 'cat-photo-bounce' : ''}`}
-          />
-          {particles.map(p => (
-            <span key={p.id} className="particle-float" style={{ left: `${p.left}%` }}>{p.emoji}</span>
-          ))}
-        </button>
-        <div className="small text-muted mt-1">
-          <i className="bi bi-hand-index-thumb me-1" />Нажми на котика, чтобы погладить
-        </div>
-
-        <div className="speech-bubble">{message}</div>
-      </div>
-
-      <div className="mt-3">
-        <div className="stat-bar-label">
-          <span><i className="bi bi-egg-fried me-1" />Сытость</span>
-          <span>{Math.round(hunger)}%</span>
-        </div>
-        <div className="stat-bar-track mb-3">
-          <div className="stat-bar-fill fill-hunger" style={{ width: `${hunger}%` }} />
-        </div>
-
-        <div className="text-center mb-3">
-          <button className="feed-btn" onClick={handleFeed} disabled={coins < FEED_COST || hunger >= 100}>
-            <i className="bi bi-cup-straw me-2" />
-            Покормить (🪙 {FEED_COST})
+      <div className="cat-card p-3 p-md-4">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <span className="coin-badge"><i className="bi bi-coin" /> {coins}</span>
+          <button className="btn btn-pill btn-outline-soft btn-sm" onClick={onOpenShop}>
+            <i className="bi bi-bag-heart me-1" /> {t('wardrobe')}
           </button>
-          {hunger >= 100 && <div className="small text-muted mt-2">Котик наелся под завязку 😽</div>}
         </div>
 
-        <div className="cat-color-row">
-          <span className="pomo-setting-label"><i className="bi bi-palette me-1" />Окрас котика</span>
-          <div className="cat-color-swatches">
-            {CAT_COLORS.map(c => (
-              <button
-                key={c.id}
-                type="button"
-                className={`cat-swatch ${catColor === c.id ? 'cat-swatch-active' : ''}`}
-                style={{ background: c.swatch }}
-                title={c.label}
-                aria-label={c.label}
-                onClick={() => onChangeCatColor(c.id)}
-              />
+        <div className="cat-stage">
+          <button
+            type="button"
+            className="cat-image-btn"
+            onClick={handlePet}
+            aria-label={t('petHint')}
+            title={t('petHint')}
+          >
+            <img
+              src={imageSrc}
+              alt={t('catAlt')}
+              onError={handleImgError}
+              className={`cat-photo ${bounce ? 'cat-photo-bounce' : ''}`}
+            />
+            {particles.map(p => (
+              <span key={p.id} className="particle-float" style={{ left: `${p.left}%` }}>{p.emoji}</span>
             ))}
+          </button>
+          <div className="small text-muted mt-1">
+            <i className="bi bi-hand-index-thumb me-1" />{t('petHint')}
+          </div>
+
+          <div className="speech-bubble">{message}</div>
+        </div>
+
+        <div className="mt-3">
+          <div className="stat-bar-label">
+            <span><i className="bi bi-egg-fried me-1" />{t('hungerLabel')}</span>
+            <span>{Math.round(hunger)}%</span>
+          </div>
+          <div className="stat-bar-track mb-3">
+            <div className="stat-bar-fill fill-hunger" style={{ width: `${hunger}%` }} />
+          </div>
+
+          <div className="text-center mb-3">
+            <button className="feed-btn" onClick={handleFeed} disabled={coins < FEED_COST || hunger >= 100}>
+              <i className="bi bi-cup-straw me-2" />
+              {t('feed')} (🪙 {FEED_COST})
+            </button>
+            {hunger >= 100 && <div className="small text-muted mt-2">{t('catFull')}</div>}
+          </div>
+
+          <div className="cat-color-row">
+            <span className="pomo-setting-label"><i className="bi bi-palette me-1" />{t('catColor')}</span>
+            <div className="cat-color-swatches">
+              {CAT_COLORS.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`cat-swatch ${catColor === c.id ? 'cat-swatch-active' : ''}`}
+                  style={{ background: c.swatch }}
+                  title={c.label}
+                  aria-label={c.label}
+                  onClick={() => onChangeCatColor(c.id)}
+                />
+              ))}
+            
+            </div>
           </div>
         </div>
-      </div>
+        <Metronome t={t} />
 
-      <div className="small text-muted text-center mt-3">
-        {idleMinutes < 1 ? 'Активность только что была' : `Без активности: ${idleMinutes} мин.`}
+        <div className="small text-muted text-center mt-3">
+          {idleMinutes < 1 ? t('activityJustNow') : t('noActivityFor', { n: idleMinutes })}
+        </div>
       </div>
     </div>
   )

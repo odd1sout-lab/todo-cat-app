@@ -12,7 +12,7 @@ function clamp(v, [min, max]) {
   return Math.min(max, Math.max(min, v))
 }
 
-export default function PomodoroTimer({ settings, onChangeSettings, onPomodoroComplete, ambient }) {
+export default function PomodoroTimer({ settings, onChangeSettings, onPomodoroComplete, ambient, t }) {
   const { workMin, breakMin, longBreakMin, roundsBeforeLong } = settings
   const [mode, setMode] = useState('work') // 'work' | 'break' | 'longbreak'
   const [secondsLeft, setSecondsLeft] = useState(workMin * 60)
@@ -71,21 +71,21 @@ export default function PomodoroTimer({ settings, onChangeSettings, onPomodoroCo
   const totalSeconds = durationFor(mode)
   const progress = 100 - Math.round((secondsLeft / totalSeconds) * 100)
   const ringColor = mode === 'work' ? '#6C5CE7' : mode === 'longbreak' ? '#FF7A66' : '#2FBF96'
-  const modeLabel = mode === 'work' ? 'Фокус' : mode === 'longbreak' ? 'Длинный отдых' : 'Перерыв'
+  const modeLabel = mode === 'work' ? t('pomodoroFocus') : mode === 'longbreak' ? t('pomodoroLongBreak') : t('pomodoroBreak')
   const modeClass = mode === 'work' ? 'timer-mode-work' : mode === 'longbreak' ? 'timer-mode-long' : 'timer-mode-break'
 
   return (
     <div className="panel p-3 p-md-4">
       <div className="d-flex justify-content-between align-items-start mb-3">
         <div>
-          <div className="eyebrow">Фокус-сессия</div>
-          <h2 className="panel-title mb-0"><i className="bi bi-clock-history" /> Помодоро</h2>
+          <div className="eyebrow">{t('pomodoroEyebrow')}</div>
+          <h2 className="panel-title mb-0"><i className="bi bi-clock-history" /> {t('pomodoroTitle')}</h2>
         </div>
         <button
           className="btn-ghost-icon btn-ghost-icon-sm"
           onClick={() => setShowSettings(s => !s)}
-          aria-label="Настроить длительность"
-          title="Настроить длительность"
+          aria-label={t('adjustDuration')}
+          title={t('adjustDuration')}
         >
           <i className="bi bi-sliders" />
         </button>
@@ -94,31 +94,31 @@ export default function PomodoroTimer({ settings, onChangeSettings, onPomodoroCo
       {showSettings && (
         <div className="pomo-settings mb-3">
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-lightning-charge me-1" />Фокус</span>
+            <span className="pomo-setting-label"><i className="bi bi-lightning-charge me-1" />{t('pomodoroFocus')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustWork(-5)} disabled={workMin <= WORK_LIMIT[0]}>−</button>
-              <span>{workMin} мин</span>
+              <span>{workMin} {t('minutesShort')}</span>
               <button type="button" onClick={() => adjustWork(5)} disabled={workMin >= WORK_LIMIT[1]}>+</button>
             </div>
           </div>
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-cup-hot me-1" />Короткий отдых</span>
+            <span className="pomo-setting-label"><i className="bi bi-cup-hot me-1" />{t('shortBreakLabel')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustBreak(-1)} disabled={breakMin <= BREAK_LIMIT[0]}>−</button>
-              <span>{breakMin} мин</span>
+              <span>{breakMin} {t('minutesShort')}</span>
               <button type="button" onClick={() => adjustBreak(1)} disabled={breakMin >= BREAK_LIMIT[1]}>+</button>
             </div>
           </div>
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-moon-stars me-1" />Длинный отдых</span>
+            <span className="pomo-setting-label"><i className="bi bi-moon-stars me-1" />{t('longBreakLabel')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustLongBreak(-5)} disabled={longBreakMin <= LONG_BREAK_LIMIT[0]}>−</button>
-              <span>{longBreakMin} мин</span>
+              <span>{longBreakMin} {t('minutesShort')}</span>
               <button type="button" onClick={() => adjustLongBreak(5)} disabled={longBreakMin >= LONG_BREAK_LIMIT[1]}>+</button>
             </div>
           </div>
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-arrow-repeat me-1" />Раундов до отдыха</span>
+            <span className="pomo-setting-label"><i className="bi bi-arrow-repeat me-1" />{t('roundsUntilBreak')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustRounds(-1)} disabled={roundsBeforeLong <= ROUNDS_LIMIT[0]}>−</button>
               <span>{roundsBeforeLong}</span>
@@ -136,28 +136,27 @@ export default function PomodoroTimer({ settings, onChangeSettings, onPomodoroCo
           <div className="timer-ring-inner">
             <div className="timer-time">{minutes}:{seconds}</div>
             <span className={`timer-mode-badge ${modeClass}`}>{modeLabel}</span>
+            <span className="timer-round-badge">
+              {t('round')} {Math.min(roundsDone + 1, roundsBeforeLong)} / {roundsBeforeLong}
+            </span>
           </div>
         </div>
-      </div>
-
-      <div className="text-center small text-muted mb-3">
-        Раунд {Math.min(roundsDone + 1, roundsBeforeLong)} из {roundsBeforeLong}
       </div>
 
       <div className="d-flex gap-2 justify-content-center mb-3">
         <button className="btn btn-pill btn-primary-soft" onClick={() => setRunning(r => !r)}>
           <i className={`bi ${running ? 'bi-pause-fill' : 'bi-play-fill'} me-1`} />
-          {running ? 'Пауза' : 'Старт'}
+          {running ? t('pause') : t('start')}
         </button>
         <button className="btn btn-pill btn-outline-soft" onClick={reset}>
-          <i className="bi bi-arrow-counterclockwise me-1" />Сброс
+          <i className="bi bi-arrow-counterclockwise me-1" />{t('reset')}
         </button>
       </div>
 
-      <AmbientSoundBar ambient={ambient} />
+      <AmbientSoundBar ambient={ambient} t={t} />
 
       <p className="small text-muted text-center mt-3 mb-0">
-        <i className="bi bi-coin me-1" />Завершённая рабочая сессия — {POMODORO_COIN_REWARD} монет котику.
+        <i className="bi bi-coin me-1" />{t('pomodoroRewardNote', { coins: POMODORO_COIN_REWARD })}
       </p>
     </div>
   )

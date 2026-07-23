@@ -5,13 +5,15 @@ const TABATA_COIN_REWARD = 6
 const WORK_LIMIT = [5, 120]
 const REST_LIMIT = [5, 120]
 const ROUNDS_LIMIT = [1, 20]
+const REPS_LIMIT = [1, 100]
 
 function clamp(v, [min, max]) {
   return Math.min(max, Math.max(min, v))
 }
 
-export default function TabataTimer({ settings, onChangeSettings, onTabataComplete, ambient }) {
-  const { workSec, restSec, rounds } = settings
+export default function TabataTimer({ settings, onChangeSettings, onTabataComplete, ambient, t }) {
+  const { workSec, restSec, rounds, workMode = 'time', reps = 12 } = settings
+  const isRepsMode = workMode === 'reps'
   const [phase, setPhase] = useState('idle') // 'idle' | 'work' | 'rest' | 'done'
   const [round, setRound] = useState(1)
   const [secondsLeft, setSecondsLeft] = useState(workSec)
@@ -19,26 +21,33 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
   const [showSettings, setShowSettings] = useState(false)
   const intervalRef = useRef(null)
 
+  const finishRound = () => {
+    if (round >= rounds) {
+      setRunning(false)
+      setPhase('done')
+      onTabataComplete(TABATA_COIN_REWARD)
+      return
+    }
+    setPhase('rest')
+    setSecondsLeft(restSec)
+  }
+
+  // Таймер по секундам — работает только когда фаза "работа" в режиме по времени, либо фаза "отдых" (всегда по времени)
   useEffect(() => {
     if (!running) return
+    if (phase === 'work' && isRepsMode) return // в режиме повторений работа не тикает — ждём кнопку "Готово"
+
     intervalRef.current = setInterval(() => {
       setSecondsLeft(prev => {
         if (prev <= 1) {
           if (phase === 'work') {
-            if (round >= rounds) {
-              clearInterval(intervalRef.current)
-              setRunning(false)
-              setPhase('done')
-              onTabataComplete(TABATA_COIN_REWARD)
-              return 0
-            }
-            setPhase('rest')
-            return restSec
+            finishRound()
+            return workSec
           }
           if (phase === 'rest') {
             setRound(r => r + 1)
             setPhase('work')
-            return workSec
+            return isRepsMode ? 0 : workSec
           }
           return prev
         }
@@ -46,13 +55,14 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
       })
     }, 1000)
     return () => clearInterval(intervalRef.current)
-  }, [running, phase, round, rounds, workSec, restSec, onTabataComplete])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, phase, round, rounds, workSec, restSec, isRepsMode])
 
   const start = () => {
     if (phase === 'idle' || phase === 'done') {
       setPhase('work')
       setRound(1)
-      setSecondsLeft(workSec)
+      setSecondsLeft(isRepsMode ? 0 : workSec)
     }
     setRunning(true)
   }
@@ -63,33 +73,56 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
     setRunning(false)
     setPhase('idle')
     setRound(1)
-    setSecondsLeft(workSec)
+    setSecondsLeft(isRepsMode ? 0 : workSec)
+  }
+
+  // В режиме повторений: жмём "Готово" сами, когда закончили сет
+  const completeRepsRound = () => {
+    if (round >= rounds) {
+      setRunning(false)
+      setPhase('done')
+      onTabataComplete(TABATA_COIN_REWARD)
+      return
+    }
+    setPhase('rest')
+    setSecondsLeft(restSec)
   }
 
   const adjustWork = (d) => onChangeSettings({ ...settings, workSec: clamp(workSec + d, WORK_LIMIT) })
   const adjustRest = (d) => onChangeSettings({ ...settings, restSec: clamp(restSec + d, REST_LIMIT) })
   const adjustRounds = (d) => onChangeSettings({ ...settings, rounds: clamp(rounds + d, ROUNDS_LIMIT) })
+  const adjustReps = (d) => onChangeSettings({ ...settings, reps: clamp(reps + d, REPS_LIMIT) })
+  const setMode = (mode) => onChangeSettings({ ...settings, workMode: mode })
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
   const seconds = String(secondsLeft % 60).padStart(2, '0')
   const totalSeconds = phase === 'rest' ? restSec : workSec
-  const progress = phase === 'idle' || phase === 'done' ? 0 : 100 - Math.round((secondsLeft / totalSeconds) * 100)
+  const progress = phase === 'idle' || phase === 'done' ? 0
+    : (phase === 'work' && isRepsMode) ? 100
+    : 100 - Math.round((secondsLeft / totalSeconds) * 100)
   const ringColor = phase === 'rest' ? '#2FBF96' : '#FF7A66'
-  const modeLabel = phase === 'idle' ? 'Готов начать' : phase === 'work' ? 'Работа' : phase === 'rest' ? 'Отдых' : 'Готово!'
+  const modeLabel = phase === 'idle' ? t('pomodoroReady') : phase === 'work' ? t('tabataWork') : phase === 'rest' ? t('tabataRest') : t('tabataDone')
   const modeClass = phase === 'rest' ? 'timer-mode-break' : phase === 'work' ? 'timer-mode-tabata' : 'timer-mode-work'
+
+  const ringCenterContent = () => {
+    if (phase === 'done') return '🎉'
+    if (phase === 'work' && isRepsMode) return `${reps}×`
+    if (phase === 'idle') return isRepsMode ? `${reps}×` : `${workSec}s`
+    return `${minutes}:${seconds}`
+  }
 
   return (
     <div className="panel p-3 p-md-4">
       <div className="d-flex justify-content-between align-items-start mb-3">
         <div>
-          <div className="eyebrow">Интервальная тренировка</div>
-          <h2 className="panel-title mb-0"><i className="bi bi-stopwatch" /> Табата</h2>
+          <div className="eyebrow">{t('tabataEyebrow')}</div>
+          <h2 className="panel-title mb-0"><i className="bi bi-stopwatch" /> {t('tabataTitle')}</h2>
         </div>
         <button
           className="btn-ghost-icon btn-ghost-icon-sm"
           onClick={() => setShowSettings(s => !s)}
-          aria-label="Настроить табату"
-          title="Настроить табату"
+          aria-label={t('adjustTabata')}
+          title={t('adjustTabata')}
         >
           <i className="bi bi-sliders" />
         </button>
@@ -98,23 +131,45 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
       {showSettings && (
         <div className="pomo-settings mb-3">
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-lightning-charge me-1" />Работа</span>
-            <div className="stepper">
-              <button type="button" onClick={() => adjustWork(-5)} disabled={workSec <= WORK_LIMIT[0]}>−</button>
-              <span>{workSec} сек</span>
-              <button type="button" onClick={() => adjustWork(5)} disabled={workSec >= WORK_LIMIT[1]}>+</button>
+            <span className="pomo-setting-label">{t('workFormat')}</span>
+            <div className="theme-toggle">
+              <button type="button" className={!isRepsMode ? 'theme-active' : ''} onClick={() => setMode('time')}>
+                {t('tabataByTime')}
+              </button>
+              <button type="button" className={isRepsMode ? 'theme-active' : ''} onClick={() => setMode('reps')}>
+                {t('tabataByReps')}
+              </button>
             </div>
           </div>
+          {isRepsMode ? (
+            <div className="pomo-setting-row">
+              <span className="pomo-setting-label"><i className="bi bi-arrow-repeat me-1" />{t('repsInRound')}</span>
+              <div className="stepper">
+                <button type="button" onClick={() => adjustReps(-1)} disabled={reps <= REPS_LIMIT[0]}>−</button>
+                <span>{reps}</span>
+                <button type="button" onClick={() => adjustReps(1)} disabled={reps >= REPS_LIMIT[1]}>+</button>
+              </div>
+            </div>
+          ) : (
+            <div className="pomo-setting-row">
+              <span className="pomo-setting-label"><i className="bi bi-lightning-charge me-1" />{t('tabataWorkLabel')}</span>
+              <div className="stepper">
+                <button type="button" onClick={() => adjustWork(-5)} disabled={workSec <= WORK_LIMIT[0]}>−</button>
+                <span>{workSec} {t('secondsShort')}</span>
+                <button type="button" onClick={() => adjustWork(5)} disabled={workSec >= WORK_LIMIT[1]}>+</button>
+              </div>
+            </div>
+          )}
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-cup-hot me-1" />Отдых</span>
+            <span className="pomo-setting-label"><i className="bi bi-cup-hot me-1" />{t('tabataRestLabel')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustRest(-5)} disabled={restSec <= REST_LIMIT[0]}>−</button>
-              <span>{restSec} сек</span>
+              <span>{restSec} {t('secondsShort')}</span>
               <button type="button" onClick={() => adjustRest(5)} disabled={restSec >= REST_LIMIT[1]}>+</button>
             </div>
           </div>
           <div className="pomo-setting-row">
-            <span className="pomo-setting-label"><i className="bi bi-arrow-repeat me-1" />Раундов</span>
+            <span className="pomo-setting-label"><i className="bi bi-arrow-repeat me-1" />{t('tabataRoundsLabel')}</span>
             <div className="stepper">
               <button type="button" onClick={() => adjustRounds(-1)} disabled={rounds <= ROUNDS_LIMIT[0]}>−</button>
               <span>{rounds}</span>
@@ -130,28 +185,45 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
           style={{ background: `conic-gradient(${ringColor} ${progress}%, #EDEAF9 ${progress}%)` }}
         >
           <div className="timer-ring-inner">
-            <div className="timer-time">{phase === 'idle' ? `${workSec}s` : phase === 'done' ? '🎉' : `${minutes}:${seconds}`}</div>
+            <div className="timer-time">{ringCenterContent()}</div>
             <span className={`timer-mode-badge ${modeClass}`}>{modeLabel}</span>
+            {phase !== 'idle' && phase !== 'done' && (
+              <span className="timer-round-badge">{t('round')} {round} / {rounds}</span>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="text-center small text-muted mb-3">
-        {phase === 'idle' ? `Всего раундов: ${rounds}` : phase === 'done' ? 'Тренировка завершена!' : `Раунд ${round} из ${rounds}`}
-      </div>
+      {phase === 'idle' && (
+        <div className="text-center small text-muted mb-3">{t('tabataTotalRounds', { n: rounds })}</div>
+      )}
+      {phase === 'done' && (
+        <div className="text-center small text-muted mb-3">{t('tabataFinished')}</div>
+      )}
 
-      <div className="d-flex gap-2 justify-content-center mb-3">
-        <button className="btn btn-pill btn-primary-soft" onClick={running ? pause : start}>
-          <i className={`bi ${running ? 'bi-pause-fill' : 'bi-play-fill'} me-1`} />
-          {running ? 'Пауза' : phase === 'idle' || phase === 'done' ? 'Начать' : 'Продолжить'}
-        </button>
-        <button className="btn btn-pill btn-outline-soft" onClick={reset}>
-          <i className="bi bi-arrow-counterclockwise me-1" />Сброс
-        </button>
-      </div>
+      {phase === 'work' && isRepsMode && running ? (
+        <div className="d-flex gap-2 justify-content-center mb-3">
+          <button className="btn btn-pill btn-primary-soft" onClick={completeRepsRound}>
+            <i className="bi bi-check-lg me-1" />{t('tabataRepsDone')}
+          </button>
+          <button className="btn btn-pill btn-outline-soft" onClick={reset}>
+            <i className="bi bi-arrow-counterclockwise me-1" />{t('reset')}
+          </button>
+        </div>
+      ) : (
+        <div className="d-flex gap-2 justify-content-center mb-3">
+          <button className="btn btn-pill btn-primary-soft" onClick={running ? pause : start}>
+            <i className={`bi ${running ? 'bi-pause-fill' : 'bi-play-fill'} me-1`} />
+            {running ? t('pause') : phase === 'idle' || phase === 'done' ? t('begin') : t('resume')}
+          </button>
+          <button className="btn btn-pill btn-outline-soft" onClick={reset}>
+            <i className="bi bi-arrow-counterclockwise me-1" />{t('reset')}
+          </button>
+        </div>
+      )}
 
       <p className="small text-muted text-center mt-3 mb-0">
-        <i className="bi bi-coin me-1" />Завершённая тренировка — {TABATA_COIN_REWARD} монет котику.
+        <i className="bi bi-coin me-1" />{t('tabataRewardNote', { coins: TABATA_COIN_REWARD })}
       </p>
     </div>
   )

@@ -33,32 +33,44 @@ export function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
-const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
-
-export function weekdayShort(date) {
-  return WEEKDAY_SHORT[date.getDay()]
+const WEEKDAY_SHORT = { ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] }
+const MONTHS = {
+  ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+}
+const MONTHS_SHORT = {
+  ru: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 }
 
-export function formatFullDate(date) {
-  return `${date.getDate()} ${MONTHS[date.getMonth()]}`
+export function weekdayShort(date, lang = 'ru') {
+  return (WEEKDAY_SHORT[lang] || WEEKDAY_SHORT.ru)[date.getDay()]
 }
 
-export function formatMonthYear(date) {
-  return `${MONTHS_SHORT[date.getMonth()]}. ${date.getFullYear()}`
+export function formatFullDate(date, lang = 'ru') {
+  return `${date.getDate()} ${(MONTHS[lang] || MONTHS.ru)[date.getMonth()]}`
 }
 
-export function relativeDayLabel(date) {
+export function formatMonthYear(date, lang = 'ru') {
+  return `${(MONTHS_SHORT[lang] || MONTHS_SHORT.ru)[date.getMonth()]}. ${date.getFullYear()}`
+}
+
+export function relativeDayLabel(date, lang = 'ru') {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const target = new Date(date)
   target.setHours(0, 0, 0, 0)
   const diffDays = Math.round((target - today) / 86400000)
+  if (lang === 'en') {
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays === -1) return 'Yesterday'
+    return `${weekdayShort(target, lang)}, ${formatFullDate(target, lang)}`
+  }
   if (diffDays === 0) return 'Сегодня'
   if (diffDays === 1) return 'Завтра'
   if (diffDays === -1) return 'Вчера'
-  return `${weekdayShort(target)}, ${formatFullDate(target)}`
+  return `${weekdayShort(target, lang)}, ${formatFullDate(target, lang)}`
 }
 
 // Дедлайн задачи. Если указано конкретное время — сравниваем именно с ним.
@@ -84,4 +96,26 @@ export function daysUntil(dateISO) {
   const target = fromISODate(dateISO)
   target.setHours(0, 0, 0, 0)
   return Math.round((target - today) / 86400000)
+}
+
+// Сколько дней завершено, текущая серия дней подряд, процент выполнения —
+// для ежедневных (повторяющихся) задач.
+export function computeRecurringStats(task) {
+  const start = fromISODate(task.dueDate)
+  start.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const totalDays = Math.max(1, Math.round((today - start) / 86400000) + 1)
+  const completedSet = new Set(task.completedDates || [])
+  const doneDays = completedSet.size
+  const percent = Math.min(100, Math.round((doneDays / totalDays) * 100))
+
+  let streak = 0
+  let cursor = new Date(today)
+  if (!completedSet.has(toISODate(cursor))) cursor = addDays(cursor, -1)
+  while (completedSet.has(toISODate(cursor))) {
+    streak++
+    cursor = addDays(cursor, -1)
+  }
+  return { totalDays, doneDays, percent, streak }
 }

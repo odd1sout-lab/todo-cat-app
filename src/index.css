@@ -207,6 +207,7 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   color: var(--ink-soft);
   transition: all 0.15s ease;
 }
+.priority-toggle button.active-none { background: #EEECF7; color: var(--ink-soft); }
 .priority-toggle button.active-low { background: var(--mint-light); color: #1c8a6a; }
 .priority-toggle button.active-medium { background: var(--gold-light); color: #a8720a; }
 .priority-toggle button.active-high { background: var(--coral-light); color: #c8452e; }
@@ -227,10 +228,16 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   transform: translateY(-2px);
   box-shadow: var(--shadow-pop);
 }
+.task-item.priority-none { border-left-color: var(--border); }
 .task-item.priority-low { border-left-color: var(--mint); }
 .task-item.priority-medium { border-left-color: var(--gold); }
 .task-item.priority-high { border-left-color: var(--coral); }
 .task-item.task-done { opacity: 0.6; }
+.task-text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
 .task-item.task-done .task-text { text-decoration: line-through; color: var(--ink-soft); }
 
 .task-check {
@@ -260,6 +267,7 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+.chip-none { background: #EEECF7; color: var(--ink-soft); }
 .chip-low { background: var(--mint-light); color: #1c8a6a; }
 .chip-medium { background: var(--gold-light); color: #a8720a; }
 .chip-high { background: var(--coral-light); color: #c8452e; }
@@ -273,6 +281,44 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   color: var(--primary-dark);
   display: inline-flex;
   align-items: center;
+}
+
+.task-recurring-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--pink-light);
+  color: var(--pink);
+  display: inline-flex;
+  align-items: center;
+}
+
+.recurring-toggle-btn {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.recurring-toggle-active {
+  background: var(--pink-light);
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.recurring-progress {
+  max-width: 260px;
+}
+.recurring-progress .stat-bar-track { height: 6px; }
+.recurring-progress-label {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  display: block;
+  margin-top: 0.25rem;
 }
 
 .task-category-chip {
@@ -416,6 +462,13 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
 .timer-mode-break { background: var(--mint-light); color: #1c8a6a; }
 .timer-mode-long { background: var(--coral-light); color: #c8452e; }
 .timer-mode-tabata { background: var(--coral-light); color: #c8452e; }
+
+.timer-round-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-top: 0.35rem;
+}
 
 /* ============ Ambient sound ============ */
 .ambient-bar {
@@ -614,6 +667,30 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   justify-content: center;
 }
 .stepper button:disabled { opacity: 0.4; }
+
+/* ============ Metronome ============ */
+.drums-svg {
+  width: 200px;
+  max-width: 60%;
+  height: auto;
+  filter: grayscale(0.15);
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+.drums-svg-active {
+  filter: none;
+  animation: drums-pulse 0.5s ease infinite alternate;
+}
+@keyframes drums-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.03); }
+}
+.metronome-countin {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+}
 
 /* ============ Events / countdown tab ============ */
 .event-date-input { max-width: 170px; }
@@ -838,7 +915,8 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 0.25rem;
   padding: 0.7rem 1rem;
-  max-width: 300px;
+  max-width: min(300px, 100%);
+  overflow-wrap: anywhere;
   font-size: 0.9rem;
   font-weight: 500;
   box-shadow: var(--shadow-pop);

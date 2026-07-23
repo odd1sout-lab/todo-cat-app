@@ -1,20 +1,20 @@
 import { OUTFITS } from '../data/outfits'
 
-export default function CatShop({ show, onClose, coins, ownedOutfits, equippedOutfit, onBuy, onEquip }) {
+export default function CatShop({ show, onClose, coins, ownedOutfits, equippedOutfit, onBuy, onEquip, t }) {
   if (!show) return null
 
   return (
     <div className="modal-backdrop-custom" onClick={onClose}>
       <div className="modal-panel p-3 p-md-4" onClick={e => e.stopPropagation()}>
         <div className="d-flex justify-content-between align-items-center mb-1">
-          <h2 className="panel-title mb-0"><i className="bi bi-bag-heart" /> Гардероб котика</h2>
-          <button className="btn-ghost-icon" onClick={onClose} aria-label="Закрыть">
+          <h2 className="panel-title mb-0"><i className="bi bi-bag-heart" /> {t('shopTitle')}</h2>
+          <button className="btn-ghost-icon" onClick={onClose} aria-label={t('close')}>
             <i className="bi bi-x-lg" />
           </button>
         </div>
         <p className="small text-muted mb-3">
           <span className="coin-badge me-2"><i className="bi bi-coin" /> {coins}</span>
-          Зарабатывай монеты, выполняя задачи и помодоро-сессии!
+          {t('earnCoinsHint')}
         </p>
 
         <div className="row g-2">
@@ -35,7 +35,7 @@ export default function CatShop({ show, onClose, coins, ownedOutfits, equippedOu
                       disabled={equipped}
                       onClick={() => onEquip(outfit.id)}
                     >
-                      {equipped ? 'Надето' : 'Надеть'}
+                      {equipped ? t('equipped') : t('equip')}
                     </button>
                   ) : (
                     <button
@@ -43,7 +43,7 @@ export default function CatShop({ show, onClose, coins, ownedOutfits, equippedOu
                       disabled={coins < outfit.price}
                       onClick={() => onBuy(outfit.id)}
                     >
-                      Купить
+                      {t('buy')}
                     </button>
                   )}
                 </div>

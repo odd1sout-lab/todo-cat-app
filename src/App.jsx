@@ -14,6 +14,7 @@ import EventsCalendar from './components/EventsCalendar'
 import { OUTFITS } from './data/outfits'
 import { addDays, fromISODate, isPastDeadline, startOfWeek, toISODate } from './utils/date'
 import { playSfx } from './utils/sfx'
+import { translate } from './i18n'
 
 const HUNGER_DECAY_PER_MINUTE = 0.2 // ~ 1 точка каждые 5 минут
 const PET_DAILY_COIN_CAP = 8
@@ -67,7 +68,7 @@ function App() {
     update(prev => ({ ...prev, lastActivityAt: Date.now() }))
   }, [update])
 
-  const addTask = (text, priority, dueTime, category) => {
+  const addTask = (text, priority, dueTime, category, recurring) => {
     update(prev => ({
       ...prev,
       tasks: [...prev.tasks, {
@@ -80,6 +81,9 @@ function App() {
         dueDate: selectedDateISO,
         dueTime: dueTime || null,
         rewarded: false,
+        recurring: !!recurring,
+        completedDates: [],
+        rewardedDates: [],
       }],
     }))
     touchActivity()
@@ -88,6 +92,43 @@ function App() {
   const toggleTask = (id) => {
     const task = data.tasks.find(t => t.id === id)
     if (!task) return
+
+    if (task.recurring) {
+      const isDoneToday = (task.completedDates || []).includes(selectedDateISO)
+      const nowDone = !isDoneToday
+      const cheated = nowDone && isPastDeadline({ ...task, dueDate: selectedDateISO })
+
+      update(prev => {
+        const current = prev.tasks.find(t => t.id === id)
+        if (!current) return prev
+        const completedDates = current.completedDates || []
+        const rewardedDates = current.rewardedDates || []
+        let nextCompleted, nextRewarded, coinsDelta
+
+        if (nowDone) {
+          playSfx(cheated ? 'bad_mur.mp3' : 'good_mur.mp3')
+          nextCompleted = [...completedDates, selectedDateISO]
+          nextRewarded = cheated ? rewardedDates : [...rewardedDates, selectedDateISO]
+          coinsDelta = cheated ? 0 : COIN_REWARD
+        } else {
+          nextCompleted = completedDates.filter(d => d !== selectedDateISO)
+          const wasRewarded = rewardedDates.includes(selectedDateISO)
+          nextRewarded = rewardedDates.filter(d => d !== selectedDateISO)
+          coinsDelta = wasRewarded ? -COIN_REWARD : 0
+        }
+
+        return {
+          ...prev,
+          tasks: prev.tasks.map(t => t.id === id ? { ...t, completedDates: nextCompleted, rewardedDates: nextRewarded } : t),
+          coins: Math.max(0, prev.coins + coinsDelta),
+          lastActivityAt: Date.now(),
+        }
+      })
+
+      if (nowDone && !cheated) setJustCompletedTick(t => t + 1)
+      return
+    }
+
     const nowDone = !task.done
     const cheated = nowDone && isPastDeadline(task)
 
@@ -184,6 +225,8 @@ function App() {
 
   const setCatColor = (color) => update(prev => ({ ...prev, catColor: color }))
   const setTheme = (theme) => update(prev => ({ ...prev, theme }))
+  const setLanguage = (language) => update(prev => ({ ...prev, language }))
+  const t = (key, vars) => translate(data.language, key, vars)
 
   const addEvent = (name, date, emoji) => {
     update(prev => ({
@@ -212,6 +255,8 @@ function App() {
       tabataWorkSec: next.workSec,
       tabataRestSec: next.restSec,
       tabataRounds: next.rounds,
+      tabataWorkMode: next.workMode,
+      tabataReps: next.reps,
     }))
   }
 
@@ -227,21 +272,36 @@ function App() {
     setWeekStart(startOfWeek(fromISODate(iso)))
   }
 
-  const tasksForSelectedDay = useMemo(
-    () => data.tasks.filter(t => taskDateISO(t) === selectedDateISO),
-    [data.tasks, selectedDateISO]
-  )
+  const tasksForSelectedDay = useMemo(() => {
+    return data.tasks
+      .filter(t => t.recurring ? t.dueDate <= selectedDateISO : taskDateISO(t) === selectedDateISO)
+      .map(t => t.recurring
+        ? { ...t, done: (t.completedDates || []).includes(selectedDateISO) }
+        : t
+      )
+  }, [data.tasks, selectedDateISO])
 
   const taskCounts = useMemo(() => {
     const map = {}
-    for (const t of data.tasks) {
-      const iso = taskDateISO(t)
-      if (!map[iso]) map[iso] = { total: 0, done: 0 }
-      map[iso].total += 1
-      if (t.done) map[iso].done += 1
+    const visibleDays = Array.from({ length: 7 }, (_, i) => toISODate(addDays(weekStart, i)))
+    for (const iso of visibleDays) {
+      let total = 0
+      let done = 0
+      for (const t of data.tasks) {
+        if (t.recurring) {
+          if (t.dueDate <= iso) {
+            total += 1
+            if ((t.completedDates || []).includes(iso)) done += 1
+          }
+        } else if (taskDateISO(t) === iso) {
+          total += 1
+          if (t.done) done += 1
+        }
+      }
+      map[iso] = { total, done }
     }
     return map
-  }, [data.tasks])
+  }, [data.tasks, weekStart])
 
   const handleImportClick = () => fileInputRef.current?.click()
 
@@ -259,7 +319,7 @@ function App() {
 
   return (
     <div className="app-bg min-vh-100 has-bottom-tabs" id="top">
-      <Navbar onOpenSettings={() => setSettingsOpen(true)} />
+      <Navbar onOpenSettings={() => setSettingsOpen(true)} t={t} />
       <input
         type="file"
         accept="application/json"
@@ -269,7 +329,7 @@ function App() {
       />
 
       <div className="container py-4">
-        {activeTab === 'tasks' && (
+        <div className={activeTab === 'tasks' ? '' : 'd-none'}>
           <div className="d-flex flex-column gap-4">
             <WeekCalendar
               weekStart={weekStart}
@@ -280,6 +340,8 @@ function App() {
               onNextWeek={goNextWeek}
               onToday={goToday}
               onJumpToDate={jumpToDate}
+              t={t}
+              lang={data.language}
             />
             <TodoList
               tasks={tasksForSelectedDay}
@@ -287,19 +349,23 @@ function App() {
               onAdd={addTask}
               onToggle={toggleTask}
               onDelete={deleteTask}
+              t={t}
+              lang={data.language}
             />
           </div>
-        )}
+        </div>
 
-        {activeTab === 'events' && (
+        <div className={activeTab === 'events' ? '' : 'd-none'}>
           <EventsCalendar
             events={data.events}
             onAdd={addEvent}
             onDelete={deleteEvent}
+            t={t}
+            lang={data.language}
           />
-        )}
+        </div>
 
-        {activeTab === 'pomodoro' && (
+        <div className={activeTab === 'pomodoro' ? '' : 'd-none'}>
           <PomodoroTimer
             settings={{
               workMin: data.pomodoroWorkMin,
@@ -310,23 +376,27 @@ function App() {
             onChangeSettings={updatePomodoroSettings}
             onPomodoroComplete={onPomodoroComplete}
             ambient={ambient}
+            t={t}
           />
-        )}
+        </div>
 
-        {activeTab === 'tabata' && (
+        <div className={activeTab === 'tabata' ? '' : 'd-none'}>
           <TabataTimer
             settings={{
               workSec: data.tabataWorkSec,
               restSec: data.tabataRestSec,
               rounds: data.tabataRounds,
+              workMode: data.tabataWorkMode,
+              reps: data.tabataReps,
             }}
             onChangeSettings={updateTabataSettings}
             onTabataComplete={onTabataComplete}
             ambient={ambient}
+            t={t}
           />
-        )}
+        </div>
 
-        {activeTab === 'cat' && (
+        <div className={activeTab === 'cat' ? '' : 'd-none'}>
           <VirtualCat
             lastActivityAt={data.lastActivityAt}
             equippedOutfit={data.equippedOutfit}
@@ -338,11 +408,12 @@ function App() {
             onOpenShop={() => setShopOpen(true)}
             onFeed={feedCat}
             onPet={petCat}
+            t={t}
           />
-        )}
+        </div>
       </div>
 
-      <BottomTabBar activeTab={activeTab} onSelectTab={setActiveTab} />
+      <BottomTabBar activeTab={activeTab} onSelectTab={setActiveTab} t={t} />
 
       <CatShop
         show={shopOpen}
@@ -352,6 +423,7 @@ function App() {
         equippedOutfit={data.equippedOutfit}
         onBuy={buyOutfit}
         onEquip={equipOutfit}
+        t={t}
       />
 
       <SettingsPanel
@@ -359,8 +431,11 @@ function App() {
         onClose={() => setSettingsOpen(false)}
         theme={data.theme}
         onSetTheme={setTheme}
+        language={data.language}
+        onSetLanguage={setLanguage}
         onExport={exportJson}
         onImportClick={handleImportClick}
+        t={t}
       />
     </div>
   )
