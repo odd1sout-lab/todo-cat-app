@@ -34,7 +34,7 @@ function DrumsIllustration({ active }) {
 export default function Metronome({ t }) {
   const [bpm, setBpm] = useState(100)
   const [running, setRunning] = useState(false)
-  const [countIn, setCountIn] = useState(null) 
+  const [countIn, setCountIn] = useState(null) // число ударов до старта бита, либо null
   const audioCtxRef = useRef(null)
   const timerRef = useRef(null)
   const stepRef = useRef(0)
@@ -64,7 +64,7 @@ export default function Metronome({ t }) {
   const playSample = (name) => {
     const audio = new Audio(SAMPLE_PATHS[name])
     audio.volume = 0.8
-    audio.play().catch(() => { })
+    audio.play().catch(() => { /* файл ещё не добавлен — тихо игнорируем */ })
   }
 
   const stopAll = () => {
@@ -146,6 +146,10 @@ export default function Metronome({ t }) {
       {countIn !== null && (
         <div className="text-center metronome-countin">{countIn}</div>
       )}
+
+      <p className="small text-muted text-center mb-0">
+        {t('drumSamplesHint')}
+      </p>
     </div>
   )
 }

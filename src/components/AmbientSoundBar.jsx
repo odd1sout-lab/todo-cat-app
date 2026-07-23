@@ -12,10 +12,10 @@ export default function AmbientSoundBar({ ambient, t }) {
             type="button"
             className={`ambient-track-btn ${playing && track === id ? 'ambient-track-active' : ''}`}
             onClick={() => toggleTrack(id)}
-            title={cfg.label}
+            title={t(cfg.labelKey)}
           >
             <i className={`bi ${cfg.icon}`} />
-            <span>{cfg.label}</span>
+            <span>{t(cfg.labelKey)}</span>
           </button>
         ))}
       </div>

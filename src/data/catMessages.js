@@ -7,69 +7,106 @@ export function catMood(idleMinutes, hunger) {
   return 'calm'
 }
 
-export const HAPPY_MESSAGES = [
-  'Ты сегодня просто огонь! Мур~',
-  'Ещё одна задача побеждена! Я горжусь тобой.',
-  'Вжух — и готово! Погладь меня в награду 🐾',
-  'Обожаю, когда ты продуктивный. Так держать!',
-  'Мяу! Это было впечатляюще.',
-]
-
-export const CALM_MESSAGES = [
-  'Есть ещё дела на сегодня? Я подожду тут, на подоконнике.',
-  'Мур... чем займёмся дальше?',
-  'Я слежу за тобой одним глазом, всё в порядке 😼',
-  'Может, разобьём большую задачу на маленькие?',
-]
-
-export const HUNGRY_MESSAGES = [
-  'Кажется, у меня в мисочке пустовато... не забудь про меня 🍽️',
-  'Животик слегка урчит... есть что-нибудь вкусненькое?',
-  'Мяу! Пора бы уже перекусить котику.',
-]
-
-export const SAD_MESSAGES = [
-  'Я уже весь извёлся от скуки... пожалуйста, сделай хоть что-то 😿',
-  'Без тебя тут так тихо и грустно... я начинаю переживать.',
-  'Ты обо мне забыл? И о делах тоже... мне очень одиноко.',
-  'Я свернулся в клубочек и жду хоть каких-то новостей от тебя 😢',
-]
-
-export const ANGRY_MESSAGES = [
-  'Фыр! Совсем меня забросил — и голодного, и одинокого!',
-  'Я не в духе. Покорми меня и вернись к делам, пожалуйста!',
-  'Хвост трубой от возмущения! Займись мной и задачами уже.',
-  'Кажется, кто-то совсем забыл про своего котика...',
-]
-
-export const FED_MESSAGES = [
-  'Ммм, вкуснятина! Спасибо тебе! 😻',
-  'Ты лучший! Теперь у меня полно сил на мурчание.',
-  'Вжух, всё съел! Готов болеть за тебя дальше!',
-  'Няшка вкусная была. Обнимаю тебя лапками 🐾',
-]
-
-export const PET_MESSAGES = [
-  'Мурррр... ещё, ещё! 😻',
-  'Обожаю, когда меня гладят!',
-  'Мур-мур-мур, тепло и приятно.',
-  'Твоя рука просто волшебная, мур~',
-  'Промурчал бы весь день, если бы мог.',
-]
-
-const MOOD_POOLS = {
-  happy: HAPPY_MESSAGES,
-  calm: CALM_MESSAGES,
-  hungry: HUNGRY_MESSAGES,
-  sad: SAD_MESSAGES,
-  angry: ANGRY_MESSAGES,
+const MESSAGES = {
+  ru: {
+    happy: [
+      'Ты сегодня просто огонь! Мур~',
+      'Ещё одна задача побеждена! Я горжусь тобой.',
+      'Вжух — и готово! Погладь меня в награду 🐾',
+      'Обожаю, когда ты продуктивный. Так держать!',
+      'Мяу! Это было впечатляюще.',
+    ],
+    calm: [
+      'Есть ещё дела на сегодня? Я подожду тут, на подоконнике.',
+      'Мур... чем займёмся дальше?',
+      'Я слежу за тобой одним глазом, всё в порядке 😼',
+      'Может, разобьём большую задачу на маленькие?',
+    ],
+    hungry: [
+      'Кажется, у меня в мисочке пустовато... не забудь про меня 🍽️',
+      'Животик слегка урчит... есть что-нибудь вкусненькое?',
+      'Мяу! Пора бы уже перекусить котику.',
+    ],
+    sad: [
+      'Я уже весь извёлся от скуки... пожалуйста, сделай хоть что-то 😿',
+      'Без тебя тут так тихо и грустно... я начинаю переживать.',
+      'Ты обо мне забыл? И о делах тоже... мне очень одиноко.',
+      'Я свернулся в клубочек и жду хоть каких-то новостей от тебя 😢',
+    ],
+    angry: [
+      'Фыр! Совсем меня забросил — и голодного, и одинокого!',
+      'Я не в духе. Покорми меня и вернись к делам, пожалуйста!',
+      'Хвост трубой от возмущения! Займись мной и задачами уже.',
+      'Кажется, кто-то совсем забыл про своего котика...',
+    ],
+    fed: [
+      'Ммм, вкуснятина! Спасибо тебе! 😻',
+      'Ты лучший! Теперь у меня полно сил на мурчание.',
+      'Вжух, всё съел! Готов болеть за тебя дальше!',
+      'Няшка вкусная была. Обнимаю тебя лапками 🐾',
+    ],
+    pet: [
+      'Мурррр... ещё, ещё! 😻',
+      'Обожаю, когда меня гладят!',
+      'Мур-мур-мур, тепло и приятно.',
+      'Твоя рука просто волшебная, мур~',
+      'Промурчал бы весь день, если бы мог.',
+    ],
+  },
+  en: {
+    happy: [
+      "You're on fire today! Purr~",
+      'Another task defeated! I\u2019m so proud of you.',
+      'Zoom — and done! Pet me as a reward 🐾',
+      'I love it when you\u2019re productive. Keep going!',
+      'Meow! That was impressive.',
+    ],
+    calm: [
+      'Got more to do today? I\u2019ll wait here on the windowsill.',
+      'Purr... what\u2019s next?',
+      'I\u2019m keeping one eye on you, all good 😼',
+      'Maybe split that big task into smaller ones?',
+    ],
+    hungry: [
+      'My bowl looks a bit empty... don\u2019t forget about me 🍽️',
+      'My tummy is rumbling a little... got any treats?',
+      'Meow! Time for a snack, don\u2019t you think?',
+    ],
+    sad: [
+      'I\u2019m so bored I could cry... please do something 😿',
+      'It\u2019s so quiet and sad without you... I\u2019m starting to worry.',
+      'Did you forget about me? And your tasks too... I feel so lonely.',
+      'I\u2019ve curled up in a ball waiting for any news from you 😢',
+    ],
+    angry: [
+      'Hmph! You\u2019ve completely neglected me — hungry AND lonely!',
+      'I\u2019m not in the mood. Feed me and get back to your tasks, please!',
+      'Tail puffed up with annoyance! Pay attention to me and your tasks already.',
+      'Looks like someone completely forgot about their cat...',
+    ],
+    fed: [
+      'Mmm, delicious! Thank you! 😻',
+      'You\u2019re the best! Now I\u2019ve got plenty of energy to purr.',
+      'Nom nom, all gone! Ready to cheer you on!',
+      'That snack was great. Hugging you with my paws 🐾',
+    ],
+    pet: [
+      'Purrrr... more, more! 😻',
+      'I love being petted!',
+      'Purr purr purr, so warm and nice.',
+      'Your hand is pure magic, purr~',
+      'I could purr all day if I could.',
+    ],
+  },
 }
 
-export function pickMessage(mood, flags = {}) {
+export function pickMessage(mood, flags = {}, lang = 'ru') {
+  const pools = MESSAGES[lang] || MESSAGES.ru
   const { justCompletedTask, justFed, justPetted } = flags
-  if (justFed) return FED_MESSAGES[Math.floor(Math.random() * FED_MESSAGES.length)]
-  if (justPetted) return PET_MESSAGES[Math.floor(Math.random() * PET_MESSAGES.length)]
-  if (justCompletedTask) return HAPPY_MESSAGES[Math.floor(Math.random() * HAPPY_MESSAGES.length)]
-  const pool = MOOD_POOLS[mood] || CALM_MESSAGES
-  return pool[Math.floor(Math.random() * pool.length)]
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+
+  if (justFed) return pick(pools.fed)
+  if (justPetted) return pick(pools.pet)
+  if (justCompletedTask) return pick(pools.happy)
+  return pick(pools[mood] || pools.calm)
 }

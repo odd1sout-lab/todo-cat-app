@@ -30,7 +30,7 @@ function TaskRow({ task, onToggle, onDelete, t }) {
               </span>
             )}
             <span className="task-category-chip" style={{ background: `${category.color}22`, color: category.color }}>
-              <i className={`bi ${category.icon} me-1`} />{category.label}
+              <i className={`bi ${category.icon} me-1`} />{t(category.labelKey)}
             </span>
             <span className={`task-chip chip-${task.priority}`}>
               {priorityLabels[task.priority]}
@@ -171,7 +171,7 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
           aria-label={t('categoryAria')}
         >
           {CATEGORIES.map(c => (
-            <option key={c.id} value={c.id}>{c.label}</option>
+            <option key={c.id} value={c.id}>{t(c.labelKey)}</option>
           ))}
         </select>
       </form>
@@ -192,7 +192,7 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
               className={`category-filter-chip ${filterCategory === c.id ? 'category-filter-active' : ''}`}
               onClick={() => setFilterCategory(c.id)}
             >
-              <i className={`bi ${c.icon} me-1`} />{c.label}
+              <i className={`bi ${c.icon} me-1`} />{t(c.labelKey)}
             </button>
           ))}
         </div>

@@ -7,7 +7,7 @@ import Metronome from './Metronome'
 const FEED_COST = 5
 const FEED_AMOUNT = 30
 const PET_COOLDOWN_MS = 500
- 
+
 export default function VirtualCat({
   lastActivityAt,
   equippedOutfit,
@@ -20,6 +20,7 @@ export default function VirtualCat({
   onFeed,
   onPet,
   t,
+  lang,
 }) {
   const [message, setMessage] = useState(t('catGreeting'))
   const [idleMinutes, setIdleMinutes] = useState(0)
@@ -55,19 +56,20 @@ export default function VirtualCat({
   }
 
   useEffect(() => {
-    setMessage(pickMessage(mood, {}))
+    setMessage(pickMessage(mood, {}, lang))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mood])
+  }, [mood, lang])
 
   useEffect(() => {
     if (justCompletedTaskTick > 0) {
-      setMessage(pickMessage(mood, { justCompletedTask: true }))
+      setMessage(pickMessage(mood, { justCompletedTask: true }, lang))
       flashHappy()
       popBounce()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [justCompletedTaskTick])
 
+  // Сбрасываем цепочку запасных картинок при смене цвета/настроения/наряда
   useEffect(() => {
     setImgFallbackLevel(0)
   }, [catColor, displayMood, outfit.id])
@@ -87,7 +89,7 @@ export default function VirtualCat({
   const handleFeed = () => {
     if (coins < FEED_COST || hunger >= 100) return
     onFeed(FEED_COST, FEED_AMOUNT)
-    setMessage(pickMessage(mood, { justFed: true }))
+    setMessage(pickMessage(mood, { justFed: true }, lang))
     addParticle('🍖')
     flashHappy()
     popBounce()
@@ -98,12 +100,14 @@ export default function VirtualCat({
     if (now - lastPetRef.current < PET_COOLDOWN_MS) return
     lastPetRef.current = now
     onPet()
-    setMessage(pickMessage(mood, { justPetted: true }))
+    setMessage(pickMessage(mood, { justPetted: true }, lang))
     addParticle('💗')
     flashHappy()
     popBounce()
   }
 
+  // Цепочка запасных вариантов, если конкретной картинки ещё нет в public/cat/:
+  // 1) цвет+настроение+наряд  2) цвет+настроение+обычный наряд  3) общая заглушка
   const imageChain = [
     buildCatImagePath(catColor, displayMood, outfit.id),
     buildCatImagePath(catColor, displayMood, 'standard'),
@@ -117,6 +121,7 @@ export default function VirtualCat({
 
   return (
     <div>
+      <Metronome t={t} />
 
       <div className="cat-card p-3 p-md-4">
         <div className="d-flex justify-content-between align-items-center mb-2">
@@ -182,11 +187,9 @@ export default function VirtualCat({
                   onClick={() => onChangeCatColor(c.id)}
                 />
               ))}
-            
             </div>
           </div>
         </div>
-        <Metronome t={t} />
 
         <div className="small text-muted text-center mt-3">
           {idleMinutes < 1 ? t('activityJustNow') : t('noActivityFor', { n: idleMinutes })}

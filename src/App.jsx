@@ -409,6 +409,7 @@ function App() {
             onFeed={feedCat}
             onPet={petCat}
             t={t}
+            lang={data.language}
           />
         </div>
       </div>

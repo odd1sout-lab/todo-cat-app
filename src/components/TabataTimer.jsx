@@ -222,6 +222,8 @@ export default function TabataTimer({ settings, onChangeSettings, onTabataComple
         </div>
       )}
 
+      <AmbientSoundBar ambient={ambient} t={t} />
+
       <p className="small text-muted text-center mt-3 mb-0">
         <i className="bi bi-coin me-1" />{t('tabataRewardNote', { coins: TABATA_COIN_REWARD })}
       </p>

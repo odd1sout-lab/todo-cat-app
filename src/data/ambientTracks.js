@@ -1,8 +1,10 @@
 const BASE = import.meta.env.BASE_URL
 
+// labelKey ссылается на ключ в src/i18n.js — так название звука
+// переключается вместе с языком интерфейса.
 export const AMBIENT_TRACKS = {
-  rain: { label: 'Дождь', icon: 'bi-cloud-rain-heavy', src: `${BASE}sounds/rain.mp3` },
-  forest: { label: 'Лес', icon: 'bi-tree', src: `${BASE}sounds/forest.mp3` },
-  fire: { label: 'Костёр', icon: 'bi-fire', src: `${BASE}sounds/fire.mp3` },
-  waterfall: { label: 'Водопад', icon: 'bi-droplet-half', src: `${BASE}sounds/waterfall.mp3` },
+  rain: { labelKey: 'soundRain', icon: 'bi-cloud-rain-heavy', src: `${BASE}sounds/rain.mp3` },
+  forest: { labelKey: 'soundForest', icon: 'bi-tree', src: `${BASE}sounds/forest.mp3` },
+  fire: { labelKey: 'soundFire', icon: 'bi-fire', src: `${BASE}sounds/fire.mp3` },
+  waterfall: { labelKey: 'soundWaterfall', icon: 'bi-droplet-half', src: `${BASE}sounds/waterfall.mp3` },
 }
