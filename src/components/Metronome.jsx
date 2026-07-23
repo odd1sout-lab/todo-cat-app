@@ -14,21 +14,56 @@ function clamp(v, [min, max]) {
 
 function DrumsIllustration({ active }) {
   return (
-    <svg viewBox="0 0 200 140" className={`drums-svg ${active ? 'drums-svg-active' : ''}`}>
-      {/* бас-бочка */}
-      <ellipse cx="100" cy="100" rx="46" ry="30" fill="#241F3D" opacity="0.08" />
-      <rect x="60" y="55" width="80" height="55" rx="14" fill="#6C5CE7" />
-      <ellipse cx="100" cy="55" rx="40" ry="12" fill="#8B7CFF" />
-      <circle cx="100" cy="82" r="14" fill="#FFF3E2" opacity="0.9" />
-      {/* малый барабан слева */}
-      <rect x="14" y="70" width="46" height="30" rx="8" fill="#FF7A66" />
-      <ellipse cx="37" cy="70" rx="23" ry="8" fill="#FF9C89" />
-      {/* хай-хэт справа */}
-      <line x1="165" y1="110" x2="165" y2="50" stroke="#241F3D" strokeWidth="4" />
-      <ellipse cx="165" cy="45" rx="26" ry="7" fill="#FFC968" />
-      <ellipse cx="165" cy="38" rx="24" ry="6" fill="#FFD98A" />
+    <svg
+      viewBox="0 0 260 180"
+      className={`drums-svg ${active ? 'drums-svg-active' : ''}`}
+    >
+      {/* Тарелки */}
+      <ellipse cx="60" cy="48" rx="26" ry="7" fill="#FFD56A" />
+      <ellipse cx="195" cy="42" rx="30" ry="8" fill="#FFD56A" />
+      <ellipse cx="225" cy="65" rx="24" ry="7" fill="#F6C453" />
+
+      {/* Стойки */}
+      <line x1="60" y1="55" x2="60" y2="132" stroke="#444" strokeWidth="3" />
+      <line x1="195" y1="50" x2="195" y2="132" stroke="#444" strokeWidth="3" />
+      <line x1="225" y1="72" x2="225" y2="132" stroke="#444" strokeWidth="3" />
+
+      {/* Томы */}
+      <rect x="86" y="42" width="38" height="26" rx="6" fill="#8B7CFF" />
+      <ellipse cx="105" cy="42" rx="19" ry="6" fill="#A99CFF" />
+
+      <rect x="136" y="42" width="38" height="26" rx="6" fill="#8B7CFF" />
+      <ellipse cx="155" cy="42" rx="19" ry="6" fill="#A99CFF" />
+
+      {/* Малый барабан */}
+      <rect x="48" y="82" width="40" height="24" rx="5" fill="#FF7A66" />
+      <ellipse cx="68" cy="82" rx="20" ry="6" fill="#FFA08F" />
+
+      {/* Напольный том */}
+      <rect x="176" y="90" width="40" height="32" rx="6" fill="#6C5CE7" />
+      <ellipse cx="196" cy="90" rx="20" ry="6" fill="#8B7CFF" />
+
+      {/* Бас-бочка */}
+      <circle cx="130" cy="112" r="40" fill="#6C5CE7" />
+      <circle cx="130" cy="112" r="31" fill="#FFF4E8" />
+      <circle cx="130" cy="112" r="8" fill="#6C5CE7" opacity="0.25" />
+
+      {/* Педаль */}
+      <line x1="130" y1="152" x2="130" y2="135" stroke="#444" strokeWidth="3" />
+      <line x1="118" y1="156" x2="142" y2="156" stroke="#444" strokeWidth="3" />
+
+      {/* Ножки бас-бочки */}
+      <line x1="100" y1="140" x2="90" y2="156" stroke="#444" strokeWidth="3" />
+      <line x1="160" y1="140" x2="170" y2="156" stroke="#444" strokeWidth="3" />
+
+      {/* Стойка малого */}
+      <line x1="68" y1="106" x2="68" y2="132" stroke="#444" strokeWidth="3" />
+
+      {/* Палочки */}
+      <line x1="98" y1="24" x2="135" y2="52" stroke="#A56B3E" strokeWidth="3" strokeLinecap="round" />
+      <line x1="158" y1="24" x2="126" y2="52" stroke="#A56B3E" strokeWidth="3" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 export default function Metronome({ t }) {
@@ -146,10 +181,6 @@ export default function Metronome({ t }) {
       {countIn !== null && (
         <div className="text-center metronome-countin">{countIn}</div>
       )}
-
-      <p className="small text-muted text-center mb-0">
-        {t('drumSamplesHint')}
-      </p>
     </div>
   )
 }

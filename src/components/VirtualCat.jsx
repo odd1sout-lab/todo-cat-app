@@ -121,8 +121,6 @@ export default function VirtualCat({
 
   return (
     <div>
-      <Metronome t={t} />
-
       <div className="cat-card p-3 p-md-4">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <span className="coin-badge"><i className="bi bi-coin" /> {coins}</span>
@@ -190,6 +188,8 @@ export default function VirtualCat({
             </div>
           </div>
         </div>
+
+        <Metronome t={t} />
 
         <div className="small text-muted text-center mt-3">
           {idleMinutes < 1 ? t('activityJustNow') : t('noActivityFor', { n: idleMinutes })}
