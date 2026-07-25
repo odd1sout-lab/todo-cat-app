@@ -2,11 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 
 const BPM_LIMIT = [40, 220]
 const COUNT_IN_BEATS = 4
+const SAMPLE_NAMES = ['kick', 'snare', 'hihat']
 const SAMPLE_PATHS = {
   kick: `${import.meta.env.BASE_URL}sounds/kick.mp3`,
   snare: `${import.meta.env.BASE_URL}sounds/snare.mp3`,
   hihat: `${import.meta.env.BASE_URL}sounds/hihat.mp3`,
 }
+
+// Классический "lookahead scheduler": JS-таймер сам по себе неточный (может
+// подрагивать на десятки мс), поэтому мы не проигрываем звук прямо в момент
+// срабатывания setInterval. Вместо этого таймер каждые 25мс лишь ЗАГЛЯДЫВАЕТ
+// на 100мс вперёд и заранее планирует ноты через точные метки времени самого
+// аудио-движка (audioContext.currentTime + source.start(when)) — именно этот
+// внутренний часовой механизм браузера даёт сэмпл-точный ритм, а не наш таймер.
+const SCHEDULE_AHEAD_SEC = 0.1
+const LOOKAHEAD_MS = 25
 
 function clamp(v, [min, max]) {
   return Math.min(max, Math.max(min, v))
@@ -63,16 +73,26 @@ function DrumsIllustration({ active }) {
       <line x1="98" y1="24" x2="135" y2="52" stroke="#A56B3E" strokeWidth="3" strokeLinecap="round" />
       <line x1="158" y1="24" x2="126" y2="52" stroke="#A56B3E" strokeWidth="3" strokeLinecap="round" />
     </svg>
-  );
+  )
 }
 
 export default function Metronome({ t }) {
   const [bpm, setBpm] = useState(100)
   const [running, setRunning] = useState(false)
-  const [countIn, setCountIn] = useState(null) // число ударов до старта бита, либо null
+  const [countIn, setCountIn] = useState(null)
+  const [missingSamples, setMissingSamples] = useState(false)
+
   const audioCtxRef = useRef(null)
-  const timerRef = useRef(null)
+  const buffersRef = useRef({})
+  const loadingRef = useRef(false)
+  const schedulerTimerRef = useRef(null)
+  const nextNoteTimeRef = useRef(0)
   const stepRef = useRef(0)
+  const phaseRef = useRef('idle') // 'countin' | 'beat'
+  const countInLeftRef = useRef(0)
+  const bpmRef = useRef(bpm)
+
+  useEffect(() => { bpmRef.current = bpm }, [bpm])
 
   const ensureCtx = () => {
     if (!audioCtxRef.current) {
@@ -83,73 +103,113 @@ export default function Metronome({ t }) {
     return audioCtxRef.current
   }
 
-  const playClick = (accent) => {
+  const loadBuffer = async (ctx, url) => {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('not found')
+      const arrayBuffer = await res.arrayBuffer()
+      return await ctx.decodeAudioData(arrayBuffer)
+    } catch {
+      return null
+    }
+  }
+
+  const ensureSamplesLoaded = async () => {
+    if (loadingRef.current || Object.keys(buffersRef.current).length > 0) return
+    loadingRef.current = true
     const ctx = ensureCtx()
+    const entries = await Promise.all(
+      SAMPLE_NAMES.map(async name => [name, await loadBuffer(ctx, SAMPLE_PATHS[name])])
+    )
+    const buffers = {}
+    let anyMissing = false
+    for (const [name, buf] of entries) {
+      buffers[name] = buf
+      if (!buf) anyMissing = true
+    }
+    buffersRef.current = buffers
+    setMissingSamples(anyMissing)
+    loadingRef.current = false
+  }
+
+  const playBuffer = (ctx, name, time) => {
+    const buffer = buffersRef.current[name]
+    if (!buffer) return
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(time)
+  }
+
+  const playClick = (ctx, time, accent) => {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.frequency.value = accent ? 1400 : 1000
-    gain.gain.setValueAtTime(0.35, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06)
+    gain.gain.setValueAtTime(0.35, time)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.06)
     osc.connect(gain)
     gain.connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.07)
+    osc.start(time)
+    osc.stop(time + 0.07)
   }
 
-  const playSample = (name) => {
-    const audio = new Audio(SAMPLE_PATHS[name])
-    audio.volume = 0.8
-    audio.play().catch(() => { /* файл ещё не добавлен — тихо игнорируем */ })
+  const scheduler = () => {
+    const ctx = audioCtxRef.current
+    if (!ctx) return
+    while (nextNoteTimeRef.current < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
+      const time = nextNoteTimeRef.current
+      const quarterSec = 60 / bpmRef.current
+
+      if (phaseRef.current === 'countin') {
+        const beatsLeft = countInLeftRef.current
+        playClick(ctx, time, beatsLeft === 1)
+        setCountIn(beatsLeft)
+        countInLeftRef.current -= 1
+        nextNoteTimeRef.current += quarterSec
+        if (countInLeftRef.current <= 0) {
+          phaseRef.current = 'beat'
+          stepRef.current = 0
+          setCountIn(null)
+        }
+      } else {
+        const step = stepRef.current % 8
+        if (step === 0 || step === 4) playBuffer(ctx, 'kick', time)
+        if (step === 2 || step === 6) playBuffer(ctx, 'snare', time)
+        playBuffer(ctx, 'hihat', time)
+        stepRef.current += 1
+        nextNoteTimeRef.current += quarterSec / 2
+      }
+    }
   }
 
-  const stopAll = () => {
-    clearInterval(timerRef.current)
-    timerRef.current = null
+  const start = async () => {
+    const ctx = ensureCtx()
+    setRunning(true)
+    await ensureSamplesLoaded()
+    phaseRef.current = 'countin'
+    countInLeftRef.current = COUNT_IN_BEATS
+    stepRef.current = 0
+    nextNoteTimeRef.current = ctx.currentTime + 0.05
+    schedulerTimerRef.current = setInterval(scheduler, LOOKAHEAD_MS)
+  }
+
+  const stop = () => {
+    clearInterval(schedulerTimerRef.current)
+    schedulerTimerRef.current = null
+    phaseRef.current = 'idle'
     setRunning(false)
     setCountIn(null)
   }
 
-  const startBackbeat = () => {
-    stepRef.current = 0
-    const eighthMs = (60000 / bpm) / 2
-    timerRef.current = setInterval(() => {
-      const step = stepRef.current % 8
-      if (step === 0 || step === 4) playSample('kick')
-      if (step === 2 || step === 6) playSample('snare')
-      playSample('hihat')
-      stepRef.current += 1
-    }, eighthMs)
-  }
-
-  const start = () => {
-    ensureCtx()
-    setRunning(true)
-    let beat = COUNT_IN_BEATS
-    setCountIn(beat)
-    playClick(true)
-    const quarterMs = 60000 / bpm
-    timerRef.current = setInterval(() => {
-      beat -= 1
-      if (beat <= 0) {
-        clearInterval(timerRef.current)
-        setCountIn(null)
-        startBackbeat()
-        return
-      }
-      setCountIn(beat)
-      playClick(beat === 1)
-    }, quarterMs)
-  }
-
   const toggle = () => {
-    if (running) stopAll()
+    if (running) stop()
     else start()
   }
 
   const adjustBpm = (d) => setBpm(v => clamp(v + d, BPM_LIMIT))
 
   useEffect(() => {
-    return () => clearInterval(timerRef.current)
+    return () => clearInterval(schedulerTimerRef.current)
   }, [])
 
   return (
@@ -180,6 +240,12 @@ export default function Metronome({ t }) {
 
       {countIn !== null && (
         <div className="text-center metronome-countin">{countIn}</div>
+      )}
+
+      {missingSamples && (
+        <p className="small text-muted text-center mb-0">
+          {t('drumSamplesHint')}
+        </p>
       )}
     </div>
   )
