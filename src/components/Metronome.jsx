@@ -9,12 +9,6 @@ const SAMPLE_PATHS = {
   hihat: `${import.meta.env.BASE_URL}sounds/hihat.mp3`,
 }
 
-// Классический "lookahead scheduler": JS-таймер сам по себе неточный (может
-// подрагивать на десятки мс), поэтому мы не проигрываем звук прямо в момент
-// срабатывания setInterval. Вместо этого таймер каждые 25мс лишь ЗАГЛЯДЫВАЕТ
-// на 100мс вперёд и заранее планирует ноты через точные метки времени самого
-// аудио-движка (audioContext.currentTime + source.start(when)) — именно этот
-// внутренний часовой механизм браузера даёт сэмпл-точный ритм, а не наш таймер.
 const SCHEDULE_AHEAD_SEC = 0.1
 const LOOKAHEAD_MS = 25
 
@@ -24,7 +18,7 @@ function clamp(v, [min, max]) {
 
 function DrumsIllustration({ active }) {
   return (
-    <svg
+   <svg
       viewBox="0 0 260 180"
       className={`drums-svg ${active ? 'drums-svg-active' : ''}`}
     >

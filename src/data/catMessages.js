@@ -1,7 +1,7 @@
 export function catMood(idleMinutes, hunger) {
   if (hunger <= 15 && idleMinutes >= 45) return 'angry'
   if (idleMinutes >= 60) return 'sad'
-  if (hunger <= 30) return 'hungry'
+  if (hunger <= 50) return 'hungry'
   if (idleMinutes >= 20) return 'calm'
   if (hunger > 70) return 'happy'
   return 'calm'

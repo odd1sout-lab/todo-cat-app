@@ -27,6 +27,7 @@ const defaultData = {
   catColor: 'orange',
   ambientTrack: null,
   ambientVolume: 0.5,
+  notificationsEnabled: false,
   events: [],
   language: 'ru',
 }

@@ -1,7 +1,20 @@
-import { TELEGRAM_SUPPORT_URL, TELEGRAM_CHANNEL_URL, TELEGRAM_PERSONAL_URL } from '../data/contacts'
+import { useState } from 'react'
+import { TELEGRAM_SUPPORT_URL, TELEGRAM_CHANNEL_URL, TELEGRAM_PERSONAL_URL, SUPPORT_CARD_NUMBER } from '../data/contacts'
 
-export default function SettingsPanel({ show, onClose, theme, onSetTheme, language, onSetLanguage, onExport, onImportClick, t }) {
+export default function SettingsPanel({
+  show, onClose, theme, onSetTheme, language, onSetLanguage,
+  notificationsEnabled, onToggleNotifications,
+  onExport, onImportClick, t,
+}) {
+  const [copied, setCopied] = useState(false)
   if (!show) return null
+
+  const copyCard = () => {
+    navigator.clipboard?.writeText(SUPPORT_CARD_NUMBER).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
 
   return (
     <div className="modal-backdrop-custom" onClick={onClose}>
@@ -53,6 +66,19 @@ export default function SettingsPanel({ show, onClose, theme, onSetTheme, langua
           </div>
         </div>
 
+        <div className="settings-row mb-1">
+          <span className="pomo-setting-label">{t('notificationsLabel')}</span>
+          <button
+            type="button"
+            className={`recurring-toggle-btn ${notificationsEnabled ? 'recurring-toggle-active' : ''}`}
+            onClick={onToggleNotifications}
+          >
+            <i className={`bi ${notificationsEnabled ? 'bi-bell-fill' : 'bi-bell'} me-1`} />
+            {notificationsEnabled ? t('notificationsOn') : t('notificationsEnable')}
+          </button>
+        </div>
+        <p className="small text-muted mb-3">{t('notificationsHint')}</p>
+
         <hr className="my-3" />
 
         <div className="mb-1 small fw-semibold text-muted">{t('support')}</div>
@@ -70,12 +96,21 @@ export default function SettingsPanel({ show, onClose, theme, onSetTheme, langua
 
         <hr className="my-3" />
 
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 mb-3">
           <button className="btn btn-pill btn-outline-soft btn-sm flex-fill" onClick={onExport}>
             <i className="bi bi-download me-1" /> {t('exportJson')}
           </button>
           <button className="btn btn-pill btn-outline-soft btn-sm flex-fill" onClick={onImportClick}>
             <i className="bi bi-upload me-1" /> {t('importJson')}
+          </button>
+        </div>
+
+        <hr className="my-3" />
+
+        <div className="small text-muted">
+          {t('supportDeveloper')}: <span className="fw-semibold text-body">{SUPPORT_CARD_NUMBER}</span>
+          <button type="button" className="btn-ghost-icon btn-ghost-icon-sm ms-2" onClick={copyCard} aria-label={t('supportCopy')}>
+            <i className={`bi ${copied ? 'bi-check-lg' : 'bi-clipboard'}`} />
           </button>
         </div>
       </div>

@@ -1,6 +1,3 @@
-// Утилиты для работы с датами без внешних библиотек.
-// Везде используем локальное время устройства и ISO-строку формата YYYY-MM-DD как ключ дня.
-
 export function toISODate(date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')

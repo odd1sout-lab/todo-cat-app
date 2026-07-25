@@ -15,6 +15,7 @@ import { OUTFITS } from './data/outfits'
 import { addDays, fromISODate, isPastDeadline, startOfWeek, toISODate } from './utils/date'
 import { playSfx } from './utils/sfx'
 import { translate } from './i18n'
+import { requestNotificationPermission, showNotification } from './utils/notifications'
 
 const HUNGER_DECAY_PER_MINUTE = 0.2 // ~ 1 точка каждые 5 минут
 const PET_DAILY_COIN_CAP = 8
@@ -25,6 +26,7 @@ function taskDateISO(task) {
 
 function App() {
   const { data, update, exportJson, importJson } = useJsonStore()
+  const t = (key, vars) => translate(data.language, key, vars)
   const [activeTab, setActiveTab] = useState('tasks')
   const [shopOpen, setShopOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -63,6 +65,52 @@ function App() {
     return () => clearInterval(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Проверяем задачи с дедлайном каждую минуту и шлём локальное уведомление
+  // за 10 минут до срока. Работает только пока приложение открыто — это
+  // ограничение локальных уведомлений без сервера, честно предупреждено в UI.
+  const notifiedRef = useRef(new Set())
+  useEffect(() => {
+    if (!data.notificationsEnabled) return
+
+    const NOTIFY_BEFORE_MIN = 10
+
+    const checkDeadlines = () => {
+      const now = new Date()
+      const todayISO = toISODate(now)
+      const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
+      for (const task of data.tasks) {
+        if (!task.dueTime) continue
+
+        const isDueToday = task.recurring
+          ? task.dueDate <= todayISO && !(task.completedDates || []).includes(todayISO)
+          : task.dueDate === todayISO && !task.done
+
+        if (!isDueToday) continue
+
+        const key = `${task.id}:${todayISO}`
+        if (notifiedRef.current.has(key)) continue
+
+        const [h, m] = task.dueTime.split(':').map(Number)
+        const dueMinutes = h * 60 + m
+        const minutesLeft = dueMinutes - nowMinutes
+
+        if (minutesLeft >= 0 && minutesLeft <= NOTIFY_BEFORE_MIN) {
+          notifiedRef.current.add(key)
+          showNotification(t('deadlineSoonTitle'), {
+            body: t('deadlineSoonBody', { task: task.text, n: minutesLeft }),
+            icon: `${import.meta.env.BASE_URL}icons/icon-192.png`,
+            tag: key,
+          })
+        }
+      }
+    }
+
+    checkDeadlines()
+    const id = setInterval(checkDeadlines, 60000)
+    return () => clearInterval(id)
+  }, [data.notificationsEnabled, data.tasks, t])
 
   const touchActivity = useCallback(() => {
     update(prev => ({ ...prev, lastActivityAt: Date.now() }))
@@ -226,7 +274,21 @@ function App() {
   const setCatColor = (color) => update(prev => ({ ...prev, catColor: color }))
   const setTheme = (theme) => update(prev => ({ ...prev, theme }))
   const setLanguage = (language) => update(prev => ({ ...prev, language }))
-  const t = (key, vars) => translate(data.language, key, vars)
+
+  const toggleNotifications = async () => {
+    if (data.notificationsEnabled) {
+      update(prev => ({ ...prev, notificationsEnabled: false }))
+      return
+    }
+    const result = await requestNotificationPermission()
+    if (result === 'granted') {
+      update(prev => ({ ...prev, notificationsEnabled: true }))
+    } else if (result === 'unsupported') {
+      alert(t('notificationsUnsupported'))
+    } else {
+      alert(t('notificationsDenied'))
+    }
+  }
 
   const addEvent = (name, date, emoji) => {
     update(prev => ({
@@ -434,6 +496,8 @@ function App() {
         onSetTheme={setTheme}
         language={data.language}
         onSetLanguage={setLanguage}
+        notificationsEnabled={data.notificationsEnabled}
+        onToggleNotifications={toggleNotifications}
         onExport={exportJson}
         onImportClick={handleImportClick}
         t={t}
