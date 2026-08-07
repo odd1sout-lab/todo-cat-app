@@ -4,9 +4,13 @@ import { TELEGRAM_SUPPORT_URL, TELEGRAM_CHANNEL_URL, TELEGRAM_PERSONAL_URL, SUPP
 export default function SettingsPanel({
   show, onClose, theme, onSetTheme, language, onSetLanguage,
   notificationsEnabled, onToggleNotifications,
+  geminiApiKey, onSetGeminiApiKey,
   onExport, onImportClick, t,
 }) {
   const [copied, setCopied] = useState(false)
+  const [keyInput, setKeyInput] = useState(geminiApiKey || '')
+  const [keySaved, setKeySaved] = useState(false)
+  const [showKey, setShowKey] = useState(false)
   if (!show) return null
 
   const copyCard = () => {
@@ -14,6 +18,12 @@ export default function SettingsPanel({
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
+  }
+
+  const saveKey = () => {
+    onSetGeminiApiKey(keyInput.trim())
+    setKeySaved(true)
+    setTimeout(() => setKeySaved(false), 1500)
   }
 
   return (
@@ -78,6 +88,33 @@ export default function SettingsPanel({
           </button>
         </div>
         <p className="small text-muted mb-3">{t('notificationsHint')}</p>
+
+        <hr className="my-3" />
+
+        <div className="mb-1 small fw-semibold text-muted">{t('geminiKeyLabel')}</div>
+        <p className="small text-muted mb-2">
+          {t('geminiKeyHint')}{' '}
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">{t('geminiGetKeyLink')}</a>
+        </p>
+        <div className="d-flex gap-2 mb-3">
+          <div className="task-time-input flex-grow-1">
+            <i className="bi bi-key" />
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={keyInput}
+              onChange={e => setKeyInput(e.target.value)}
+              placeholder={t('geminiKeyPlaceholder')}
+              style={{ width: '100%' }}
+            />
+            <button type="button" className="task-time-clear" onClick={() => setShowKey(s => !s)} aria-label="toggle visibility">
+              <i className={`bi ${showKey ? 'bi-eye-slash' : 'bi-eye'}`} />
+            </button>
+          </div>
+          <button type="button" className="btn btn-pill btn-outline-soft btn-sm" onClick={saveKey}>
+            <i className={`bi ${keySaved ? 'bi-check-lg' : 'bi-save'} me-1`} />
+            {keySaved ? t('geminiKeySaved') : t('geminiKeySave')}
+          </button>
+        </div>
 
         <hr className="my-3" />
 

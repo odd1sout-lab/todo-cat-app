@@ -25,7 +25,7 @@ export default function CatShop({ show, onClose, coins, ownedOutfits, equippedOu
               <div className="col-6 col-sm-4" key={outfit.id}>
                 <div className={`outfit-item ${equipped ? 'outfit-equipped' : ''}`}>
                   <div className="fs-1"><i className={`bi ${outfit.icon}`} /></div>
-                  <div className="small fw-semibold">{outfit.name}</div>
+                  <div className="small fw-semibold">{t(outfit.nameKey)}</div>
                   {outfit.price > 0 && (
                     <div className="small text-muted mb-2"><i className="bi bi-coin" /> {outfit.price}</div>
                   )}

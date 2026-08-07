@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toISODate, daysUntil, formatFullDate, fromISODate } from '../utils/date'
 
-const EMOJIS = ['🎉', '🎂', '✈️', '📅', '💼', '🎓', '❤️', '🏆', ' ']
+const EMOJIS = ['🎉', '🎂', '✈️', '📅', '💼', '🎓', '❤️', '🏆']
 
 function countdownLabel(diff, t) {
   if (diff === 0) return t('eventsToday')

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { relativeDayLabel, isPastDeadline, computeRecurringStats } from '../utils/date'
 import { CATEGORIES, getCategory } from '../data/categories'
+import { splitTaskWithGemini } from '../utils/gemini'
 
 const COIN_REWARD = 5
 
@@ -61,13 +62,16 @@ function TaskRow({ task, onToggle, onDelete, t }) {
   )
 }
 
-export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelete, t, lang }) {
+export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelete, t, lang, geminiApiKey, onOpenSettings }) {
   const [text, setText] = useState('')
   const [priority, setPriority] = useState('medium')
   const [category, setCategory] = useState('work')
   const [dueTime, setDueTime] = useState('')
   const [recurring, setRecurring] = useState(false)
   const [filterCategory, setFilterCategory] = useState('all')
+  const [aiState, setAiState] = useState('idle') // idle | loading | review | error
+  const [aiSuggestions, setAiSuggestions] = useState([])
+  const [aiErrorType, setAiErrorType] = useState(null)
 
   const PRIORITIES = [
     { id: 'none', label: t('priorityNone'), icon: 'bi-dash-circle' },
@@ -85,6 +89,52 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
     setDueTime('')
     setRecurring(false)
   }
+
+  const splitWithAI = async () => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    if (!geminiApiKey) {
+      setAiErrorType('missing_key')
+      setAiState('error')
+      return
+    }
+    setAiState('loading')
+    const result = await splitTaskWithGemini(geminiApiKey, trimmed, lang)
+    if (result.ok) {
+      setAiSuggestions(result.subtasks.map(s => ({ text: s, checked: true })))
+      setAiState('review')
+    } else {
+      setAiErrorType(result.error)
+      setAiState('error')
+    }
+  }
+
+  const toggleSuggestion = (idx) => {
+    setAiSuggestions(prev => prev.map((s, i) => i === idx ? { ...s, checked: !s.checked } : s))
+  }
+
+  const addSelectedSuggestions = () => {
+    aiSuggestions.filter(s => s.checked).forEach(s => {
+      onAdd(s.text, priority, dueTime || null, category, recurring)
+    })
+    setAiState('idle')
+    setAiSuggestions([])
+    setText('')
+    setDueTime('')
+    setRecurring(false)
+  }
+
+  const cancelAI = () => {
+    setAiState('idle')
+    setAiSuggestions([])
+  }
+
+  const aiErrorKey = {
+    missing_key: 'aiErrorMissingKey',
+    invalid_key: 'aiErrorInvalidKey',
+    network: 'aiErrorNetwork',
+    empty: 'aiErrorEmpty',
+  }[aiErrorType] || 'aiErrorNetwork'
 
   const visibleTasks = filterCategory === 'all' ? tasks : tasks.filter(t2 => (t2.category || 'other') === filterCategory)
   const activeTasks = [...visibleTasks.filter(t2 => !t2.done)].sort((a, b) => {
@@ -124,10 +174,67 @@ export default function TodoList({ tasks, selectedDate, onAdd, onToggle, onDelet
             value={text}
             onChange={e => setText(e.target.value)}
           />
+          <button
+            type="button"
+            className="btn btn-pill btn-outline-soft px-3"
+            onClick={splitWithAI}
+            disabled={!text.trim() || aiState === 'loading'}
+            title={t('aiSplitHint')}
+          >
+            <i className={`bi ${aiState === 'loading' ? 'bi-hourglass-split' : 'bi-magic'}`} />
+          </button>
           <button className="btn btn-pill btn-primary-soft px-3" type="submit">
             <i className="bi bi-plus-lg" />
           </button>
         </div>
+
+        {aiState === 'error' && (
+          <div className="ai-error-box mb-2">
+            <span>{t(aiErrorKey)}</span>
+            {aiErrorType === 'missing_key' && onOpenSettings && (
+              <button type="button" className="btn btn-pill btn-outline-soft btn-sm ms-2" onClick={onOpenSettings}>
+                {t('settings')}
+              </button>
+            )}
+            <button type="button" className="btn-ghost-icon btn-ghost-icon-sm ms-auto" onClick={() => setAiState('idle')} aria-label={t('close')}>
+              <i className="bi bi-x-lg" />
+            </button>
+          </div>
+        )}
+
+        {aiState === 'review' && (
+          <div className="ai-review-box mb-2">
+            <div className="small fw-semibold mb-2"><i className="bi bi-magic me-1" />{t('aiReviewTitle')}</div>
+            <ul className="list-unstyled d-flex flex-column gap-1 mb-2">
+              {aiSuggestions.map((s, i) => (
+                <li key={i} className="ai-suggestion-item">
+                  <button
+                    type="button"
+                    className={`task-check ${s.checked ? 'checked' : ''}`}
+                    onClick={() => toggleSuggestion(i)}
+                  >
+                    {s.checked && <i className="bi bi-check-lg" />}
+                  </button>
+                  <span className="task-text">{s.text}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-pill btn-primary-soft btn-sm"
+                onClick={addSelectedSuggestions}
+                disabled={!aiSuggestions.some(s => s.checked)}
+              >
+                <i className="bi bi-plus-lg me-1" />{t('aiAddSelected', { n: aiSuggestions.filter(s => s.checked).length })}
+              </button>
+              <button type="button" className="btn btn-pill btn-outline-soft btn-sm" onClick={cancelAI}>
+                {t('close')}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
           <div className="priority-toggle">
             {PRIORITIES.map(p => (

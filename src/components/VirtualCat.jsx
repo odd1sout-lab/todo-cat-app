@@ -3,6 +3,8 @@ import { OUTFITS } from '../data/outfits'
 import { pickMessage, catMood } from '../data/catMessages'
 import { CAT_COLORS, buildCatImagePath, FALLBACK_CAT_IMAGE } from '../data/catImages'
 import Metronome from './Metronome'
+import PingPongGame from './PingPongGame'
+import Diary from './Diary'
 
 const FEED_COST = 5
 const FEED_AMOUNT = 30
@@ -19,9 +21,14 @@ export default function VirtualCat({
   onOpenShop,
   onFeed,
   onPet,
+  onEarnGameCoins,
+  diaryEntries,
+  onAddDiaryEntry,
+  onDeleteDiaryEntry,
   t,
   lang,
 }) {
+  const [activePanel, setActivePanel] = useState('metronome')
   const [message, setMessage] = useState(t('catGreeting'))
   const [idleMinutes, setIdleMinutes] = useState(0)
   const [bounce, setBounce] = useState(false)
@@ -189,7 +196,41 @@ export default function VirtualCat({
           </div>
         </div>
 
-        <Metronome t={t} />
+        <div className="cat-panel-switcher">
+          <button
+            type="button"
+            className={`cat-panel-tab ${activePanel === 'metronome' ? 'cat-panel-tab-active' : ''}`}
+            onClick={() => setActivePanel('metronome')}
+          >
+            <i className="bi bi-music-note-beamed" /><span>{t('metronomeTitle')}</span>
+          </button>
+          <button
+            type="button"
+            className={`cat-panel-tab ${activePanel === 'pong' ? 'cat-panel-tab-active' : ''}`}
+            onClick={() => setActivePanel('pong')}
+          >
+            <i className="bi bi-circle-fill cat-panel-tab-icon-sm" /><span>{t('pongTitle')}</span>
+          </button>
+          <button
+            type="button"
+            className={`cat-panel-tab ${activePanel === 'diary' ? 'cat-panel-tab-active' : ''}`}
+            onClick={() => setActivePanel('diary')}
+          >
+            <i className="bi bi-journal-heart" /><span>{t('diaryTitle')}</span>
+          </button>
+        </div>
+
+        {activePanel === 'metronome' && <Metronome t={t} />}
+        {activePanel === 'pong' && <PingPongGame onEarnGameCoins={onEarnGameCoins} t={t} />}
+        {activePanel === 'diary' && (
+          <Diary
+            entries={diaryEntries}
+            onAdd={onAddDiaryEntry}
+            onDelete={onDeleteDiaryEntry}
+            t={t}
+            lang={lang}
+          />
+        )}
 
         <div className="small text-muted text-center mt-3">
           {idleMinutes < 1 ? t('activityJustNow') : t('noActivityFor', { n: idleMinutes })}

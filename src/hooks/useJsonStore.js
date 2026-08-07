@@ -28,8 +28,12 @@ const defaultData = {
   ambientTrack: null,
   ambientVolume: 0.5,
   notificationsEnabled: false,
+  gameCoinsDate: null,
+  gameCoinsToday: 0,
+  diaryEntries: [],
   events: [],
-  language: 'ru',
+  language: 'en',
+  geminiApiKey: '',
 }
 
 function loadFromDisk() {
@@ -59,7 +63,10 @@ export function useJsonStore() {
   }, [])
 
   const exportJson = useCallback(() => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    // API-ключ Gemini намеренно не включаем в бэкап — это личный секрет,
+    // ему не место в файле, которым можно случайно поделиться.
+    const { geminiApiKey, ...exportable } = data
+    const blob = new Blob([JSON.stringify(exportable, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -76,7 +83,9 @@ export function useJsonStore() {
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result)
-          setData({ ...defaultData, ...parsed })
+          // Ключ Gemini не входит в бэкапы (см. exportJson) — сохраняем текущий,
+          // чтобы импорт резервной копии не сбрасывал уже введённый ключ.
+          setData(prev => ({ ...defaultData, ...parsed, geminiApiKey: prev.geminiApiKey }))
           resolve()
         } catch (e) {
           reject(e)

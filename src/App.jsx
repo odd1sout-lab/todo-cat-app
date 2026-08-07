@@ -274,6 +274,39 @@ function App() {
   const setCatColor = (color) => update(prev => ({ ...prev, catColor: color }))
   const setTheme = (theme) => update(prev => ({ ...prev, theme }))
   const setLanguage = (language) => update(prev => ({ ...prev, language }))
+  const setGeminiApiKey = (key) => update(prev => ({ ...prev, geminiApiKey: key }))
+
+  const GAME_DAILY_COIN_CAP = 20
+  const earnGameCoins = (amount) => {
+    update(prev => {
+      const iso = toISODate(new Date())
+      const earnedToday = prev.gameCoinsDate === iso ? prev.gameCoinsToday : 0
+      const allowed = Math.max(0, Math.min(amount, GAME_DAILY_COIN_CAP - earnedToday))
+      if (allowed <= 0) return { ...prev, gameCoinsDate: iso, gameCoinsToday: earnedToday }
+      return {
+        ...prev,
+        coins: prev.coins + allowed,
+        gameCoinsDate: iso,
+        gameCoinsToday: earnedToday + allowed,
+        lastActivityAt: Date.now(),
+      }
+    })
+  }
+
+  const addDiaryEntry = (text) => {
+    update(prev => ({
+      ...prev,
+      diaryEntries: [
+        { id: crypto.randomUUID(), text, createdAt: Date.now() },
+        ...prev.diaryEntries,
+      ],
+      lastActivityAt: Date.now(),
+    }))
+  }
+
+  const deleteDiaryEntry = (id) => {
+    update(prev => ({ ...prev, diaryEntries: prev.diaryEntries.filter(e => e.id !== id) }))
+  }
 
   const toggleNotifications = async () => {
     if (data.notificationsEnabled) {
@@ -413,6 +446,8 @@ function App() {
               onDelete={deleteTask}
               t={t}
               lang={data.language}
+              geminiApiKey={data.geminiApiKey}
+              onOpenSettings={() => setSettingsOpen(true)}
             />
           </div>
         </div>
@@ -470,6 +505,10 @@ function App() {
             onOpenShop={() => setShopOpen(true)}
             onFeed={feedCat}
             onPet={petCat}
+            onEarnGameCoins={earnGameCoins}
+            diaryEntries={data.diaryEntries}
+            onAddDiaryEntry={addDiaryEntry}
+            onDeleteDiaryEntry={deleteDiaryEntry}
             t={t}
             lang={data.language}
           />
@@ -498,6 +537,8 @@ function App() {
         onSetLanguage={setLanguage}
         notificationsEnabled={data.notificationsEnabled}
         onToggleNotifications={toggleNotifications}
+        geminiApiKey={data.geminiApiKey}
+        onSetGeminiApiKey={setGeminiApiKey}
         onExport={exportJson}
         onImportClick={handleImportClick}
         t={t}

@@ -321,6 +321,32 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   margin-top: 0.25rem;
 }
 
+.ai-error-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--coral-light);
+  color: #c8452e;
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.ai-review-box {
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+}
+.ai-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+}
+
 .task-category-chip {
   font-size: 0.68rem;
   font-weight: 700;
@@ -667,6 +693,87 @@ h1, h2, h3, h4, h5, .display-brand, .btn {
   justify-content: center;
 }
 .stepper button:disabled { opacity: 0.4; }
+
+/* ============ Cat panel switcher ============ */
+.cat-panel-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin: 1rem 0;
+}
+.cat-panel-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.cat-panel-tab i { font-size: 1.2rem; }
+.cat-panel-tab-icon-sm { font-size: 0.85rem !important; color: #FF7A66; }
+.cat-panel-tab-active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+/* ============ Ping Pong ============ */
+.pong-canvas-wrap {
+  position: relative;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.pong-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  touch-action: none;
+  cursor: pointer;
+}
+.pong-score {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.pong-score-you { color: var(--primary); }
+.pong-score-ai { color: var(--coral); }
+.pong-coin-flash {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--gold-light);
+  color: #a8720a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  animation: particle-fly 0.7s ease forwards;
+}
+
+/* ============ Diary ============ */
+.diary-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+.diary-cat-reply {
+  max-width: 100%;
+}
+.diary-entry {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+}
 
 /* ============ Metronome ============ */
 .drums-svg {

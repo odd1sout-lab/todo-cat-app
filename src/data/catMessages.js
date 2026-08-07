@@ -51,6 +51,14 @@ const MESSAGES = {
       'Твоя рука просто волшебная, мур~',
       'Промурчал бы весь день, если бы мог.',
     ],
+    diary: [
+      'Мур... спасибо, что рассказал мне об этом. Я рядом.',
+      'Я внимательно выслушал каждое слово. Ты молодец, что не держишь это в себе.',
+      'Обнял бы тебя лапками, если бы мог. Ты справишься.',
+      'Спасибо, что доверился мне. Я никому не расскажу — мур-секрет.',
+      'Иногда просто выговориться уже помогает. Я тут, если что.',
+      'Слышу тебя. Что бы ни было — ты не один.',
+    ],
   },
   en: {
     happy: [
@@ -96,6 +104,14 @@ const MESSAGES = {
       'Your hand is pure magic, purr~',
       'I could purr all day if I could.',
     ],
+    diary: [
+      'Purr... thank you for telling me. I\u2019m right here with you.',
+      'I listened to every word. It\u2019s good that you didn\u2019t keep it inside.',
+      'I\u2019d hug you with my paws if I could. You\u2019ve got this.',
+      'Thanks for trusting me. I won\u2019t tell a soul — purr-secret.',
+      'Sometimes just saying it out loud helps. I\u2019m here if you need me.',
+      'I hear you. Whatever it is, you\u2019re not alone.',
+    ],
   },
 }
 
@@ -108,4 +124,9 @@ export function pickMessage(mood, flags = {}, lang = 'ru') {
   if (justPetted) return pick(pools.pet)
   if (justCompletedTask) return pick(pools.happy)
   return pick(pools[mood] || pools.calm)
+}
+
+export function pickDiaryResponse(lang = 'ru') {
+  const pools = MESSAGES[lang] || MESSAGES.ru
+  return pools.diary[Math.floor(Math.random() * pools.diary.length)]
 }
