@@ -216,7 +216,7 @@ export default function VirtualCat({
             className={`cat-panel-tab ${activePanel === 'diary' ? 'cat-panel-tab-active' : ''}`}
             onClick={() => setActivePanel('diary')}
           >
-            <i className="bi bi-journal-heart" /><span>{t('diaryTitle')}</span>
+            <i className="bi bi-book" /><span>{t('diaryTitle')}</span>
           </button>
         </div>
 
