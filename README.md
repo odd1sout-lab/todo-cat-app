@@ -1,12 +1,6 @@
-# Кот-компаньон
+# Кот компаньон 
 
-Планируй дела, работай по таймеру и заботься о виртуальном коте. Выполняй задачи, зарабатывай монеты и покупай коту наряды. Приложение создано на React и Bootstrap 5. Его можно установить на телефон и использовать офлайн.
-
-## English
-
-# Cat Companion
-
-Plan your day, use the timers, and look after a virtual cat. Complete tasks, earn coins, and buy outfits for your cat. Built with React and Bootstrap 5, the app can be installed on your phone and used offline.
+Список задач с таймером помодоро и виртуальным котиком, которого можно наряжать за монеты. Сделано на React + Bootstrap 5, работает как PWA (устанавливается на телефон как приложение).
 
 ## Как это работает
 
@@ -14,14 +8,7 @@ Plan your day, use the timers, and look after a virtual cat. Complete tasks, ear
 - **Помодоро**: 25 минут работы / 5 минут отдыха. Завершённая рабочая сессия — 8 монет.
 - **Котик**: реагирует на твою активность. Если давно ничего не делал — начинает грустить и просить тебя вернуться к делам. Если активно выполняешь задачи — радуется и хвалит.
 - **Магазин нарядов**: трать монеты на аутфиты для котика (бантик, корона, очки и т.д.).
-- **Данные**: сохраняются в браузере на устройстве. Кнопки «Экспорт JSON» и «Импорт JSON» помогут сделать резервную копию или перенести данные на другое устройство.
-
-## How it works
-
-- **Tasks**: add, complete, or delete tasks. Earn 5 coins for each completed task.
-- **Pomodoro**: work for 25 minutes, then take a 5-minute break. Earn 8 coins for each completed work session.
-- **Cat**: its mood changes with your activity. Spend coins on outfits like a bow tie, crown, or glasses.
-- **Data**: saved in your browser. Use “Export JSON” to make a backup or “Import JSON” to restore or transfer your data.
+- **Хранение данных**: всё сохраняется прямо в браузере на устройстве (это единственный способ для сайта хранить данные без сервера — браузеры не позволяют сайтам молча писать файлы на диск). Формат хранения — JSON. Дополнительно есть кнопки «Экспорт JSON» и «Импорт JSON» — они сохраняют/загружают самый настоящий `.json` файл, если захочешь сделать бэкап или перенести данные на другое устройство.
 
 ## Запуск локально
 
@@ -32,15 +19,6 @@ npm run dev
 
 Откроется на `http://localhost:5173`.
 
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173`.
-
 ## Сборка
 
 ```bash
@@ -48,14 +26,6 @@ npm run build
 ```
 
 Готовые файлы окажутся в папке `dist/`.
-
-## Build
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` folder.
 
 ## Деплой на GitHub Pages
 
@@ -86,10 +56,6 @@ npx gh-pages -d dist
 
 Если название репозитория будет отличаться от `todo-cat-app`, менять `base` в `vite.config.js` не нужно — он уже стоит как `'./'` (относительные пути), это работает для любого имени репозитория и вложенности.
 
-### Note about `base` in vite.config.js
-
-You do not need to change `base` if your repository has a different name. It is already set to `'./'`, which works for different repository names and nested paths.
-
 ## Установка как приложение на телефон
 
 После публикации на GitHub Pages открой сайт в браузере телефона:
@@ -97,10 +63,6 @@ You do not need to change `base` if your repository has a different name. It is 
 - iPhone (Safari): кнопка «Поделиться» → «На экран “Домой”».
 
 Сайт откроется как отдельное приложение, без адресной строки браузера, и будет работать офлайн (данные всё равно хранятся локально на устройстве).
-
-## Install on your phone
-
-After publishing the site, open it in your phone's browser. On Android, choose “Install app” or “Add to Home screen” from the menu. On iPhone, tap Share → “Add to Home Screen” in Safari. The app can work offline, and your data stays on your device.
 
 ## Структура проекта
 
@@ -133,16 +95,6 @@ public/
 - **Котик по картинкам** — цвет, настроение и наряд подставляются картинкой по имени файла (см. ниже).
 - **Фоновые звуки** (дождь / лес / костёр / водопад) — плеер уже готов, файлы нужно положить самому (см. ниже).
 
-## What's new in this version
-
-- **Bottom tabs** for Tasks, Pomodoro, Tabata, and Cat.
-- **Dark and light themes** that remember your choice.
-- **Tabata timer** with adjustable work, rest, and round settings.
-- **Pomodoro settings** for focus time, breaks, and rounds before a long break.
-- **Calendar** to jump to any date.
-- **Cat pictures** that change with the cat's color, mood, and outfit.
-- **Ambient sounds**: rain, forest, fire, and waterfall. Add your own audio files as described below.
-
 ### Как подставить картинки котика
 
 Картинки собираются по шаблону имени файла:
@@ -166,24 +118,9 @@ public/sounds/waterfall.mp3
 
 Список звуков и их названия — в `src/data/ambientTracks.js`.
 
-### Cat images and ambient sounds
-
-Cat image filenames use this format: `{color}_{mood}_{outfit}.png`, for example `orange_sad_standard.png`. Put the images in `public/cat/`. If an image is missing, the app tries the standard outfit for that color and mood, then `public/cat/cat.png`.
-
-Colors: `orange`, `grey`, `white`, `black`. Moods: `sad`, `happy`, `calm`, `angry`, `hungry`. Outfit names are listed in `src/data/outfits.js`.
-
-To add ambient sounds, place your own `rain.mp3`, `forest.mp3`, `fire.mp3`, and `waterfall.mp3` files in `public/sounds/`. The track list is in `src/data/ambientTracks.js`. If a file is missing, the app will show a hint. You can find free sound effects on [Pixabay](https://pixabay.com/sound-effects/).
-
 ## Что можно доработать дальше
 
 - Разные категории задач / дедлайны / приоритеты.
 - Больше нарядов и анимаций у котика.
 - Звук/вибрация по завершении помодоро.
 - Push-уведомления с напоминаниями от котика (потребует Service Worker с push-подпиской).
-
-## Ideas for later
-
-- Task categories, deadlines, and priorities.
-- More cat outfits and animations.
-- A sound or vibration when a Pomodoro session ends.
-- Push notification reminders from the cat (requires a service worker and push subscription).
